@@ -1,0 +1,19 @@
+export class PageResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+
+  constructor(data: T[], total: number, page: number, limit: number) {
+    this.data = data;
+    this.total = total;
+    this.page = page;
+    this.limit = limit;
+    this.totalPages = Math.ceil(total / limit);
+  }
+
+  static create<T>(data: T[], total: number, page: number, limit: number): PageResponse<T> {
+    return new PageResponse(data, total, page, limit);
+  }
+}

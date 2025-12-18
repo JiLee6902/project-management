@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2023",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@app/entity": ["libs/entity/src"],
+      "@app/entity/*": ["libs/entity/src/*"],
+      "@app/enum": ["libs/enum/src"],
+      "@app/enum/*": ["libs/enum/src/*"],
+      "@app/shared-libs": ["libs/shared-libs/src"],
+      "@app/shared-libs/*": ["libs/shared-libs/src/*"],
+      "@app/external-infra": ["libs/external-infra/src"],
+      "@app/external-infra/*": ["libs/external-infra/src/*"],
+      "@app/logger": ["libs/logger/src"],
+      "@app/logger/*": ["libs/logger/src/*"]
+    }
+  },
+  "include": ["apps/**/*", "libs/**/*"]
+}
