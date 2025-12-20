@@ -11,6 +11,7 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiConsumes, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { StorageService, FileResponseDto } from '@app/external-infra/storage';
@@ -21,6 +22,7 @@ import { JwtAuthGuard } from '../../auth/guard/jwt-auth.guard';
 @ApiBearerAuth()
 @Controller('upload')
 @UseGuards(JwtAuthGuard)
+@Throttle({ default: { limit: 10, ttl: 60000 } })
 export class UploadController {
   constructor(private readonly storageService: StorageService) {}
 

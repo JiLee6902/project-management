@@ -47,6 +47,12 @@ import { TaskReminderModule } from './task-reminder/task-reminder.module';
           FileMetadata,
         ],
         synchronize: false,
+        extra: {
+          max: configService.get<number>('DB_POOL_MAX', 20),
+          min: configService.get<number>('DB_POOL_MIN', 5),
+          idleTimeoutMillis: configService.get<number>('DB_IDLE_TIMEOUT', 30000),
+          connectionTimeoutMillis: configService.get<number>('DB_CONNECTION_TIMEOUT', 5000),
+        },
       }),
       inject: [ConfigService],
     }),
