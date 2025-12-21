@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { useAuth } from '../context/AuthContext';
+import { resetWorkspaceState } from '../features/workspaceSlice';
 import toast from 'react-hot-toast';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, User, CheckCircle2 } from 'lucide-react';
 
@@ -14,6 +16,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const passwordChecks = {
     length: password.length >= 6,
@@ -39,6 +42,8 @@ export default function Register() {
 
     if (result.success) {
       toast.success('Account created successfully!');
+      // Clear old workspace state from previous user
+      dispatch(resetWorkspaceState());
       // Set flag to auto-open create workspace dialog for new users
       localStorage.setItem('newSignup', 'true');
       navigate('/');

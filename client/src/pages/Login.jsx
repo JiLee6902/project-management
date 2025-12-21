@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { useAuth } from '../context/AuthContext';
+import { resetWorkspaceState } from '../features/workspaceSlice';
 import toast from 'react-hot-toast';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 
@@ -11,6 +13,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,6 +23,8 @@ export default function Login() {
 
     if (result.success) {
       toast.success('Login successful!');
+      // Clear old workspace state from previous user session
+      dispatch(resetWorkspaceState());
       navigate('/');
     } else {
       toast.error(result.error);
