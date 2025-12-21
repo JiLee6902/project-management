@@ -3,11 +3,11 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, PieChart, Pie, Cell }
 import { CheckCircle, Clock, AlertTriangle, Users, ArrowRightIcon } from "lucide-react";
 
 // Colors for charts and priorities
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+const COLORS = ["#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#3f3f46"];
 const PRIORITY_COLORS = {
-    LOW: "text-red-600 bg-red-200 dark:text-red-500 dark:bg-red-600",
-    MEDIUM: "text-blue-600 bg-blue-200 dark:text-blue-500 dark:bg-blue-600",
-    HIGH: "text-emerald-600 bg-emerald-200 dark:text-emerald-500 dark:bg-emerald-600",
+    LOW: "text-zinc-600 bg-zinc-200 dark:text-zinc-400 dark:bg-zinc-700",
+    MEDIUM: "text-zinc-700 bg-zinc-300 dark:text-zinc-300 dark:bg-zinc-600",
+    HIGH: "text-zinc-800 bg-zinc-400 dark:text-zinc-200 dark:bg-zinc-500",
 };
 
 const ProjectAnalytics = ({ project, tasks }) => {
@@ -56,30 +56,30 @@ const ProjectAnalytics = ({ project, tasks }) => {
         {
             label: "Completion Rate",
             value: `${completionRate}%`,
-            color: "text-emerald-600 dark:text-emerald-400",
-            icon: <CheckCircle className="size-5 text-emerald-600 dark:text-emerald-400" />,
-            bg: "bg-emerald-200 dark:bg-emerald-500/10",
+            color: "text-zinc-700 dark:text-zinc-300",
+            icon: <CheckCircle className="size-5 text-zinc-600 dark:text-zinc-400" />,
+            bg: "bg-zinc-200 dark:bg-zinc-500/10",
         },
         {
             label: "Active Tasks",
             value: stats.inProgress,
-            color: "text-blue-600 dark:text-blue-400",
-            icon: <Clock className="size-5 text-blue-600 dark:text-blue-400" />,
-            bg: "bg-blue-200 dark:bg-blue-500/10",
+            color: "text-zinc-700 dark:text-zinc-300",
+            icon: <Clock className="size-5 text-zinc-600 dark:text-zinc-400" />,
+            bg: "bg-zinc-200 dark:bg-zinc-500/10",
         },
         {
             label: "Overdue Tasks",
             value: stats.overdue,
-            color: "text-red-600 dark:text-red-400",
-            icon: <AlertTriangle className="size-5 text-red-600 dark:text-red-400" />,
-            bg: "bg-red-200 dark:bg-red-500/10",
+            color: "text-zinc-700 dark:text-zinc-300",
+            icon: <AlertTriangle className="size-5 text-zinc-600 dark:text-zinc-400" />,
+            bg: "bg-zinc-200 dark:bg-zinc-500/10",
         },
         {
             label: "Team Size",
             value: project?.members?.length || 0,
-            color: "text-purple-600 dark:text-purple-400",
-            icon: <Users className="size-5 text-purple-600 dark:text-purple-400" />,
-            bg: "bg-purple-200 dark:bg-purple-500/10",
+            color: "text-zinc-700 dark:text-zinc-300",
+            icon: <Users className="size-5 text-zinc-600 dark:text-zinc-400" />,
+            bg: "bg-zinc-200 dark:bg-zinc-500/10",
         },
     ];
 
@@ -117,7 +117,7 @@ const ProjectAnalytics = ({ project, tasks }) => {
                                 dark={{ stroke: "#27272a" }}
                             />
                             <YAxis tick={{ fill: "#52525b", fontSize: 12 }} axisLine={{ stroke: "#d4d4d8" }} />
-                            <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="value" fill="#52525b" radius={[4, 4, 0, 0]} />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>

@@ -23,6 +23,10 @@ export class ProjectRepository {
     });
   }
 
+  async findAll(): Promise<Project[]> {
+    return this.projectRepository.find({ select: ['id'] });
+  }
+
   async create(data: Partial<Project>): Promise<Project> {
     const project = this.projectRepository.create(data);
     return this.projectRepository.save(project);

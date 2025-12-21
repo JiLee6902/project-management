@@ -58,7 +58,7 @@ export class Project extends BaseEntity {
   @Column({ default: 0 })
   progress: number;
 
-  // Relations
+
   @ManyToOne(() => User, (user) => user.projects, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'team_lead' })
   owner: User;

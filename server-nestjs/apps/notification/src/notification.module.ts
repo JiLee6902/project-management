@@ -1,7 +1,7 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
-import { EmailModule } from '@app/external-infra';
+import { EmailModule, BullQueueModule } from '@app/external-infra';
 import { LoggerModule } from '@app/logger';
 
 import { NotificationKafkaConsumer } from './kafka/notification-kafka.consumer';
@@ -15,6 +15,7 @@ import { NotificationService } from './service/notification.service';
     }),
     LoggerModule,
     EmailModule,
+    BullQueueModule,
   ],
   providers: [
     {

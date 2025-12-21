@@ -50,27 +50,34 @@ const workspaceSlice = createSlice({
             state.workspaces = state.workspaces.filter((w) => w._id !== action.payload);
         },
         addProject: (state, action) => {
-            state.currentWorkspace.projects.push(action.payload);
-            // find workspace by id and add project to it
-            state.workspaces = state.workspaces.map((w) =>
-                w.id === state.currentWorkspace.id ? { ...w, projects: w.projects.concat(action.payload) } : w
-            );
+            const projectExists = state.currentWorkspace.projects.some(p => p.id === action.payload.id);
+            if (!projectExists) {
+                state.currentWorkspace.projects.push(action.payload);
+                state.workspaces = state.workspaces.map((w) =>
+                    w.id === state.currentWorkspace.id ? { ...w, projects: w.projects.concat(action.payload) } : w
+                );
+            }
         },
         addTask: (state, action) => {
-
             state.currentWorkspace.projects = state.currentWorkspace.projects.map((p) => {
-                console.log(p.id, action.payload.projectId, p.id === action.payload.projectId);
                 if (p.id === action.payload.projectId) {
-                    p.tasks.push(action.payload);
+                    const taskExists = p.tasks.some(t => t.id === action.payload.id);
+                    if (!taskExists) {
+                        p.tasks.push(action.payload);
+                    }
                 }
                 return p;
             });
 
-            // find workspace and project by id and add task to it
             state.workspaces = state.workspaces.map((w) =>
                 w.id === state.currentWorkspace.id ? {
                     ...w, projects: w.projects.map((p) =>
-                        p.id === action.payload.projectId ? { ...p, tasks: p.tasks.concat(action.payload) } : p
+                        p.id === action.payload.projectId ? {
+                            ...p,
+                            tasks: p.tasks.some(t => t.id === action.payload.id)
+                                ? p.tasks
+                                : p.tasks.concat(action.payload)
+                        } : p
                     )
                 } : w
             );
@@ -101,7 +108,6 @@ const workspaceSlice = createSlice({
                 p.tasks = p.tasks.filter((t) => !action.payload.includes(t.id));
                 return p;
             });
-            // find workspace and project by id and delete task from it
             state.workspaces = state.workspaces.map((w) =>
                 w.id === state.currentWorkspace.id ? {
                     ...w, projects: w.projects.map((p) =>
@@ -111,8 +117,52 @@ const workspaceSlice = createSlice({
                     )
                 } : w
             );
+        },
+        updateProject: (state, action) => {
+            state.currentWorkspace.projects = state.currentWorkspace.projects.map((p) =>
+                p.id === action.payload.id ? { ...p, ...action.payload } : p
+            );
+            state.workspaces = state.workspaces.map((w) =>
+                w.id === state.currentWorkspace.id ? {
+                    ...w, projects: w.projects.map((p) =>
+                        p.id === action.payload.id ? { ...p, ...action.payload } : p
+                    )
+                } : w
+            );
+        },
+        removeProject: (state, action) => {
+            state.currentWorkspace.projects = state.currentWorkspace.projects.filter((p) => p.id !== action.payload);
+            state.workspaces = state.workspaces.map((w) =>
+                w.id === state.currentWorkspace.id ? {
+                    ...w, projects: w.projects.filter((p) => p.id !== action.payload)
+                } : w
+            );
+        },
+        addProjectMember: (state, action) => {
+            const { projectId, member } = action.payload;
+            state.currentWorkspace.projects = state.currentWorkspace.projects.map((p) => {
+                if (p.id === projectId) {
+                    const memberExists = (p.members || []).some(m => m.id === member.id);
+                    if (!memberExists) {
+                        return { ...p, members: [...(p.members || []), member] };
+                    }
+                }
+                return p;
+            });
+            state.workspaces = state.workspaces.map((w) =>
+                w.id === state.currentWorkspace.id ? {
+                    ...w, projects: w.projects.map((p) => {
+                        if (p.id === projectId) {
+                            const memberExists = (p.members || []).some(m => m.id === member.id);
+                            if (!memberExists) {
+                                return { ...p, members: [...(p.members || []), member] };
+                            }
+                        }
+                        return p;
+                    })
+                } : w
+            );
         }
-
     },
     extraReducers: (builder) => {
         builder.addCase(fetchWorkspaces.pending, (state) => {
@@ -141,5 +191,5 @@ const workspaceSlice = createSlice({
     }
 });
 
-export const { setWorkspaces, setCurrentWorkspace, addWorkspace, updateWorkspace, deleteWorkspace, addProject, addTask, updateTask, deleteTask } = workspaceSlice.actions;
+export const { setWorkspaces, setCurrentWorkspace, addWorkspace, updateWorkspace, deleteWorkspace, addProject, addTask, updateTask, deleteTask, updateProject, removeProject, addProjectMember } = workspaceSlice.actions;
 export default workspaceSlice.reducer;

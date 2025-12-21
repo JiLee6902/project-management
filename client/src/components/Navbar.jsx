@@ -1,10 +1,12 @@
-import { SearchIcon, PanelLeft, LogOut, User } from 'lucide-react'
+import { PanelLeft, LogOut, User, AlertTriangle } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import { toggleTheme } from '../features/themeSlice'
 import { MoonIcon, SunIcon } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import NotificationBell from './NotificationBell'
+import SearchDropdown from './SearchDropdown'
 
 const Navbar = ({ setIsSidebarOpen }) => {
 
@@ -13,6 +15,8 @@ const Navbar = ({ setIsSidebarOpen }) => {
     const { theme } = useSelector(state => state.theme);
     const { user, logout } = useAuth();
     const [showDropdown, setShowDropdown] = useState(false);
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
     const dropdownRef = useRef(null);
 
     useEffect(() => {
@@ -26,8 +30,19 @@ const Navbar = ({ setIsSidebarOpen }) => {
     }, []);
 
     const handleLogout = async () => {
-        await logout();
-        navigate('/login');
+        setIsLoggingOut(true);
+        try {
+            await logout();
+            navigate('/login');
+        } finally {
+            setIsLoggingOut(false);
+            setShowLogoutConfirm(false);
+        }
+    };
+
+    const openLogoutConfirm = () => {
+        setShowDropdown(false);
+        setShowLogoutConfirm(true);
     };
 
     return (
@@ -41,18 +56,14 @@ const Navbar = ({ setIsSidebarOpen }) => {
                     </button>
 
                     {/* Search Input */}
-                    <div className="relative flex-1 max-w-sm">
-                        <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-400 size-3.5" />
-                        <input
-                            type="text"
-                            placeholder="Search projects, tasks..."
-                            className="pl-8 pr-4 py-2 w-full bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 rounded-md text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition"
-                        />
-                    </div>
+                    <SearchDropdown />
                 </div>
 
                 {/* Right section */}
                 <div className="flex items-center gap-3">
+
+                    {/* Notification Bell */}
+                    <NotificationBell />
 
                     {/* Theme Toggle */}
                     <button onClick={() => dispatch(toggleTheme())} className="size-8 flex items-center justify-center bg-white dark:bg-zinc-800 shadow rounded-lg transition hover:scale-105 active:scale-95">
@@ -69,7 +80,7 @@ const Navbar = ({ setIsSidebarOpen }) => {
                             onClick={() => setShowDropdown(!showDropdown)}
                             className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-zinc-800 transition"
                         >
-                            <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-medium">
+                            <div className="w-8 h-8 rounded-full bg-zinc-600 dark:bg-zinc-500 flex items-center justify-center text-white text-sm font-medium">
                                 {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                             </div>
                         </button>
@@ -88,8 +99,8 @@ const Navbar = ({ setIsSidebarOpen }) => {
                                     Settings
                                 </button>
                                 <button
-                                    onClick={handleLogout}
-                                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-zinc-800"
+                                    onClick={openLogoutConfirm}
+                                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800"
                                 >
                                     <LogOut className="size-4" />
                                     Sign out
@@ -99,6 +110,42 @@ const Navbar = ({ setIsSidebarOpen }) => {
                     </div>
                 </div>
             </div>
+
+            {/* Logout Confirmation Modal */}
+            {showLogoutConfirm && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 w-full max-w-sm mx-4">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/30">
+                                <AlertTriangle className="size-5 text-amber-600 dark:text-amber-400" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">Sign Out</h3>
+                        </div>
+                        <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-6">
+                            Are you sure you want to sign out? You will need to log in again to access your workspace.
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowLogoutConfirm(false)}
+                                disabled={isLoggingOut}
+                                className="px-4 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleLogout}
+                                disabled={isLoggingOut}
+                                className="px-4 py-2 text-sm bg-zinc-800 hover:bg-zinc-900 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-white rounded-lg disabled:opacity-50 flex items-center gap-2"
+                            >
+                                <LogOut className="size-4" />
+                                {isLoggingOut ? "Signing out..." : "Sign Out"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

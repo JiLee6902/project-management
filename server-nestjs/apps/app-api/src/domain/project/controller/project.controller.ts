@@ -1,4 +1,4 @@
-import { Controller, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, NotFoundException } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/guard/jwt-auth.guard';
 import { User, CurrentUser } from '@app/shared-libs';
 import { ProjectService } from '../service/project.service';
@@ -8,6 +8,15 @@ import { CreateProjectDto, UpdateProjectDto, AddProjectMemberDto } from '../dto'
 @UseGuards(JwtAuthGuard)
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
+
+  @Get(':id')
+  async getProject(@Param('id') id: string) {
+    const project = await this.projectService.getProjectById(id);
+    if (!project) {
+      throw new NotFoundException('Project not found');
+    }
+    return project;
+  }
 
   @Post()
   async createProject(

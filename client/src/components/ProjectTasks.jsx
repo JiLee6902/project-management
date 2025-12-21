@@ -1,37 +1,61 @@
 import api from "../configs/api";
 import toast from "react-hot-toast";
 import { useState, useMemo } from "react";
-import { format } from "date-fns";
+import { format, isToday, isTomorrow, isPast, differenceInDays } from "date-fns";
 import { useDispatch } from "react-redux";
 import { deleteTask, updateTask } from "../features/workspaceSlice";
-import { Bug, CalendarIcon, GitCommit, MessageSquare, Square, Trash, XIcon, Zap } from "lucide-react";
+import { Bug, CalendarIcon, GitCommit, MessageSquare, Square, Trash, Trash2, XIcon, Zap, AlertCircle, Clock, CheckSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import ViewToggle from "./ViewToggle";
+import KanbanBoard from "./KanbanBoard";
+import DeleteConfirmDialog from "./DeleteConfirmDialog";
+import { LabelBadge } from "./labels";
 
 const typeIcons = {
-    BUG: { icon: Bug, color: "text-red-600 dark:text-red-400" },
-    FEATURE: { icon: Zap, color: "text-blue-600 dark:text-blue-400" },
-    TASK: { icon: Square, color: "text-green-600 dark:text-green-400" },
-    IMPROVEMENT: { icon: GitCommit, color: "text-purple-600 dark:text-purple-400" },
-    OTHER: { icon: MessageSquare, color: "text-amber-600 dark:text-amber-400" },
+    BUG: { icon: Bug, color: "text-zinc-600 dark:text-zinc-400" },
+    FEATURE: { icon: Zap, color: "text-zinc-600 dark:text-zinc-400" },
+    TASK: { icon: Square, color: "text-zinc-600 dark:text-zinc-400" },
+    IMPROVEMENT: { icon: GitCommit, color: "text-zinc-600 dark:text-zinc-400" },
+    OTHER: { icon: MessageSquare, color: "text-zinc-600 dark:text-zinc-400" },
 };
 
 const priorityTexts = {
-    LOW: { background: "bg-red-100 dark:bg-red-950", prioritycolor: "text-red-600 dark:text-red-400" },
-    MEDIUM: { background: "bg-blue-100 dark:bg-blue-950", prioritycolor: "text-blue-600 dark:text-blue-400" },
-    HIGH: { background: "bg-emerald-100 dark:bg-emerald-950", prioritycolor: "text-emerald-600 dark:text-emerald-400" },
+    LOW: { background: "bg-zinc-100 dark:bg-zinc-800", prioritycolor: "text-zinc-600 dark:text-zinc-400" },
+    MEDIUM: { background: "bg-zinc-200 dark:bg-zinc-700", prioritycolor: "text-zinc-700 dark:text-zinc-300" },
+    HIGH: { background: "bg-zinc-300 dark:bg-zinc-600", prioritycolor: "text-zinc-800 dark:text-zinc-200" },
 };
 
-const ProjectTasks = ({ tasks }) => {
+const getDueDateStatus = (dueDate, status) => {
+    if (!dueDate || status === "DONE") return null;
+    const date = new Date(dueDate);
+    if (isPast(date) && !isToday(date)) {
+        return { label: "Overdue", color: "text-red-500 dark:text-red-400", bg: "bg-red-100 dark:bg-red-900/30", icon: AlertCircle };
+    }
+    if (isToday(date)) {
+        return { label: "Due Today", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-100 dark:bg-amber-900/30", icon: Clock };
+    }
+    if (isTomorrow(date)) {
+        return { label: "Due Tomorrow", color: "text-amber-500 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-900/20", icon: Clock };
+    }
+    const daysUntil = differenceInDays(date, new Date());
+    if (daysUntil <= 3) {
+        return { label: `${daysUntil}d left`, color: "text-zinc-600 dark:text-zinc-400", bg: "", icon: null };
+    }
+    return null;
+};
+
+const ProjectTasks = ({ tasks = [] }) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const [selectedTasks, setSelectedTasks] = useState([]);
-
+    const [view, setView] = useState("list");
     const [filters, setFilters] = useState({
         status: "",
         type: "",
         priority: "",
         assignee: "",
     });
+    const [deleteDialog, setDeleteDialog] = useState({ isOpen: false, taskIds: [], isLoading: false });
 
     const assigneeList = useMemo(
         () => Array.from(new Set(tasks.map((t) => t.assignee?.name).filter(Boolean))),
@@ -73,28 +97,37 @@ const ProjectTasks = ({ tasks }) => {
         }
     };
 
+    const openDeleteDialog = (taskIds) => {
+        setDeleteDialog({ isOpen: true, taskIds, isLoading: false });
+    };
+
+    const closeDeleteDialog = () => {
+        setDeleteDialog({ isOpen: false, taskIds: [], isLoading: false });
+    };
+
     const handleDelete = async () => {
+        const taskIds = deleteDialog.taskIds;
+        if (taskIds.length === 0) return;
+
+        setDeleteDialog((prev) => ({ ...prev, isLoading: true }));
+
         try {
-            const confirm = window.confirm("Are you sure you want to delete the selected tasks?");
-            if (!confirm) return;
-
-            toast.loading("Deleting tasks...");
-
-            await api.post("/tasks/delete", { taskIds: selectedTasks });
-            dispatch(deleteTask(selectedTasks));
-
-            toast.dismissAll();
-            toast.success("Tasks deleted successfully");
+            await api.post("/tasks/delete", { taskIds });
+            dispatch(deleteTask(taskIds));
+            setSelectedTasks((prev) => prev.filter((id) => !taskIds.includes(id)));
+            closeDeleteDialog();
+            toast.success(taskIds.length > 1 ? `${taskIds.length} tasks deleted` : "Task deleted");
         } catch (error) {
-            toast.dismissAll();
+            setDeleteDialog((prev) => ({ ...prev, isLoading: false }));
             toast.error(error?.response?.data?.message || error.message);
         }
     };
 
     return (
         <div>
-            {/* Filters */}
-            <div className="flex flex-wrap gap-4 mb-4">
+            {/* Filters and View Toggle */}
+            <div className="flex flex-wrap items-center gap-4 mb-4">
+                <ViewToggle view={view} onChange={setView} />
                 {["status", "type", "priority", "assignee"].map((name) => {
                     const options = {
                         status: [
@@ -141,20 +174,22 @@ const ProjectTasks = ({ tasks }) => {
                     <button
                         type="button"
                         onClick={() => setFilters({ status: "", type: "", priority: "", assignee: "" })}
-                        className="px-3 py-1 flex items-center gap-2 rounded bg-gradient-to-br from-purple-400 to-purple-500 text-zinc-100 dark:text-zinc-200 text-sm transition-colors"
+                        className="px-3 py-1 flex items-center gap-2 rounded bg-gradient-to-br from-zinc-500 to-zinc-600 text-white text-sm transition-colors hover:from-zinc-600 hover:to-zinc-700"
                     >
                         <XIcon className="size-3" /> Reset
                     </button>
                 )}
 
                 {selectedTasks.length > 0 && (
-                    <button type="button" onClick={handleDelete} className="px-3 py-1 flex items-center gap-2 rounded bg-gradient-to-br from-indigo-400 to-indigo-500 text-zinc-100 dark:text-zinc-200 text-sm transition-colors" >
-                        <Trash className="size-3" /> Delete
+                    <button type="button" onClick={() => openDeleteDialog(selectedTasks)} className="px-3 py-1 flex items-center gap-2 rounded bg-red-600 hover:bg-red-700 text-white text-sm transition-colors" >
+                        <Trash className="size-3" /> Delete ({selectedTasks.length})
                     </button>
                 )}
             </div>
 
-            {/* Tasks Table */}
+            {view === "board" ? (
+                <KanbanBoard tasks={filteredTasks} />
+            ) : (
             <div className="overflow-auto rounded-lg lg:border border-zinc-300 dark:border-zinc-800">
                 <div className="w-full">
                     {/* Desktop/Table View */}
@@ -176,6 +211,7 @@ const ProjectTasks = ({ tasks }) => {
                                     <th className="px-4 py-3">Status</th>
                                     <th className="px-4 py-3">Assignee</th>
                                     <th className="px-4 py-3">Due Date</th>
+                                    <th className="px-4 py-3 w-10"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -202,7 +238,27 @@ const ProjectTasks = ({ tasks }) => {
                                                         checked={selectedTasks.includes(task.id)}
                                                     />
                                                 </td>
-                                                <td className="px-4 pl-0 py-2">{task.title}</td>
+                                                <td className="px-4 pl-0 py-2">
+                                                    <div className="flex flex-col gap-1">
+                                                        <span>{task.title}</span>
+                                                        {task.labels?.length > 0 && (
+                                                            <div className="flex flex-wrap gap-1">
+                                                                {task.labels.slice(0, 3).map((label) => (
+                                                                    <LabelBadge key={label.id} label={label} size="xs" />
+                                                                ))}
+                                                                {task.labels.length > 3 && (
+                                                                    <span className="text-xs text-zinc-500">+{task.labels.length - 3}</span>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                        {task.subtasks?.length > 0 && (
+                                                            <div className="flex items-center gap-1 text-xs text-zinc-500">
+                                                                <CheckSquare className="size-3" />
+                                                                {task.subtasks.filter(s => s.completed).length}/{task.subtasks.length}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </td>
                                                 <td className="px-4 py-2">
                                                     <div className="flex items-center gap-2">
                                                         {Icon && <Icon className={`size-4 ${color}`} />}
@@ -228,24 +284,46 @@ const ProjectTasks = ({ tasks }) => {
                                                 </td>
                                                 <td className="px-4 py-2">
                                                     <div className="flex items-center gap-2">
-                                                        <div className="size-5 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs">
+                                                        <div className="size-5 rounded-full bg-zinc-600 dark:bg-zinc-500 flex items-center justify-center text-white text-xs">
                                                             {task.assignee?.name?.charAt(0)?.toUpperCase() || 'U'}
                                                         </div>
                                                         {task.assignee?.name || "-"}
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-2">
-                                                    <div className="flex items-center gap-1 text-zinc-600 dark:text-zinc-400">
-                                                        <CalendarIcon className="size-4" />
-                                                        {format(new Date(task.due_date), "dd MMMM")}
-                                                    </div>
+                                                    {(() => {
+                                                        const dueDateStatus = getDueDateStatus(task.dueDate, task.status);
+                                                        return (
+                                                            <div className="flex flex-col gap-1">
+                                                                <div className="flex items-center gap-1 text-zinc-600 dark:text-zinc-400">
+                                                                    <CalendarIcon className="size-4" />
+                                                                    {task.dueDate ? format(new Date(task.dueDate), "dd MMMM") : "-"}
+                                                                </div>
+                                                                {dueDateStatus && (
+                                                                    <span className={`text-xs px-2 py-0.5 rounded inline-flex items-center gap-1 w-fit ${dueDateStatus.bg} ${dueDateStatus.color}`}>
+                                                                        {dueDateStatus.icon && <dueDateStatus.icon className="size-3" />}
+                                                                        {dueDateStatus.label}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                </td>
+                                                <td onClick={e => e.stopPropagation()} className="px-4 py-2">
+                                                    <button
+                                                        onClick={() => openDeleteDialog([task.id])}
+                                                        className="p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-all"
+                                                        title="Delete task"
+                                                    >
+                                                        <Trash2 className="size-4" />
+                                                    </button>
                                                 </td>
                                             </tr>
                                         );
                                     })
                                 ) : (
                                     <tr>
-                                        <td colSpan="7" className="text-center text-zinc-500 dark:text-zinc-400 py-6">
+                                        <td colSpan="8" className="text-center text-zinc-500 dark:text-zinc-400 py-6">
                                             No tasks found for the selected filters.
                                         </td>
                                     </tr>
@@ -265,17 +343,44 @@ const ProjectTasks = ({ tasks }) => {
                                     <div key={task.id} className=" dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-300 dark:border-zinc-800 rounded-lg p-4 flex flex-col gap-2">
                                         <div className="flex items-center justify-between">
                                             <h3 className="text-zinc-900 dark:text-zinc-200 text-sm font-semibold">{task.title}</h3>
-                                            <input
-                                                type="checkbox"
-                                                className="size-4 accent-zinc-600 dark:accent-zinc-500"
-                                                onChange={() =>
-                                                    selectedTasks.includes(task.id)
-                                                        ? setSelectedTasks(selectedTasks.filter((i) => i !== task.id))
-                                                        : setSelectedTasks((prev) => [...prev, task.id])
-                                                }
-                                                checked={selectedTasks.includes(task.id)}
-                                            />
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => openDeleteDialog([task.id])}
+                                                    className="p-1.5 rounded-lg text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                                                    title="Delete task"
+                                                >
+                                                    <Trash2 className="size-4" />
+                                                </button>
+                                                <input
+                                                    type="checkbox"
+                                                    className="size-4 accent-zinc-600 dark:accent-zinc-500"
+                                                    onChange={() =>
+                                                        selectedTasks.includes(task.id)
+                                                            ? setSelectedTasks(selectedTasks.filter((i) => i !== task.id))
+                                                            : setSelectedTasks((prev) => [...prev, task.id])
+                                                    }
+                                                    checked={selectedTasks.includes(task.id)}
+                                                />
+                                            </div>
                                         </div>
+
+                                        {task.labels?.length > 0 && (
+                                            <div className="flex flex-wrap gap-1">
+                                                {task.labels.slice(0, 3).map((label) => (
+                                                    <LabelBadge key={label.id} label={label} size="xs" />
+                                                ))}
+                                                {task.labels.length > 3 && (
+                                                    <span className="text-xs text-zinc-500">+{task.labels.length - 3}</span>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {task.subtasks?.length > 0 && (
+                                            <div className="flex items-center gap-1 text-xs text-zinc-500">
+                                                <CheckSquare className="size-3" />
+                                                {task.subtasks.filter(s => s.completed).length}/{task.subtasks.length} subtasks
+                                            </div>
+                                        )}
 
                                         <div className="text-xs text-zinc-600 dark:text-zinc-400 flex items-center gap-2">
                                             {Icon && <Icon className={`size-4 ${color}`} />}
@@ -303,16 +408,29 @@ const ProjectTasks = ({ tasks }) => {
                                         </div>
 
                                         <div className="flex items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-                                            <div className="size-5 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs">
+                                            <div className="size-5 rounded-full bg-zinc-600 dark:bg-zinc-500 flex items-center justify-center text-white text-xs">
                                                 {task.assignee?.name?.charAt(0)?.toUpperCase() || 'U'}
                                             </div>
                                             {task.assignee?.name || "-"}
                                         </div>
 
-                                        <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
-                                            <CalendarIcon className="size-4" />
-                                            {format(new Date(task.due_date), "dd MMMM")}
-                                        </div>
+                                        {(() => {
+                                            const dueDateStatus = getDueDateStatus(task.dueDate, task.status);
+                                            return (
+                                                <div className="flex flex-col gap-1">
+                                                    <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+                                                        <CalendarIcon className="size-4" />
+                                                        {task.dueDate ? format(new Date(task.dueDate), "dd MMMM") : "-"}
+                                                    </div>
+                                                    {dueDateStatus && (
+                                                        <span className={`text-xs px-2 py-0.5 rounded inline-flex items-center gap-1 w-fit ${dueDateStatus.bg} ${dueDateStatus.color}`}>
+                                                            {dueDateStatus.icon && <dueDateStatus.icon className="size-3" />}
+                                                            {dueDateStatus.label}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
                                 );
                             })
@@ -324,6 +442,21 @@ const ProjectTasks = ({ tasks }) => {
                     </div>
                 </div>
             </div>
+            )}
+
+            <DeleteConfirmDialog
+                isOpen={deleteDialog.isOpen}
+                onClose={closeDeleteDialog}
+                onConfirm={handleDelete}
+                title="Delete Task"
+                message={
+                    deleteDialog.taskIds.length > 1
+                        ? "Are you sure you want to delete these tasks? This action cannot be undone."
+                        : "Are you sure you want to delete this task? This action cannot be undone."
+                }
+                itemCount={deleteDialog.taskIds.length}
+                isLoading={deleteDialog.isLoading}
+            />
         </div>
     );
 };

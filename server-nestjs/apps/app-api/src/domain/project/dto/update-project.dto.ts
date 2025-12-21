@@ -1,4 +1,5 @@
-import { IsString, IsOptional, IsEnum, IsDateString, IsNumber, Min, Max } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsDateString, IsNumber, Min, Max, IsUUID } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ProjectStatus, Priority } from '@app/entity/entities';
 
 export class UpdateProjectDto {
@@ -10,6 +11,9 @@ export class UpdateProjectDto {
   @IsOptional()
   description?: string;
 
+  @IsOptional()
+  teamLead?: string | null;
+
   @IsEnum(Priority)
   @IsOptional()
   priority?: Priority;
@@ -18,17 +22,18 @@ export class UpdateProjectDto {
   @IsOptional()
   status?: ProjectStatus;
 
-  @IsDateString()
   @IsOptional()
-  startDate?: Date;
-
   @IsDateString()
-  @IsOptional()
-  endDate?: Date;
+  startDate?: string;
 
+  @IsOptional()
+  @IsDateString()
+  endDate?: string;
+
+  @IsOptional()
   @IsNumber()
   @Min(0)
   @Max(100)
-  @IsOptional()
+  @Type(() => Number)
   progress?: number;
 }

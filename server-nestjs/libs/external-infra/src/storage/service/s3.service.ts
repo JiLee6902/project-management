@@ -29,15 +29,9 @@ export class S3Service {
     @Inject(s3Config.KEY)
     private readonly config: ConfigType<typeof s3Config>,
   ) {
+    // Using IAM Role on EC2 - AWS SDK auto-discovers credentials
     this.s3Client = new S3Client({
       region: this.config.region,
-      credentials:
-        this.config.accessKeyId && this.config.secretAccessKey
-          ? {
-              accessKeyId: this.config.accessKeyId,
-              secretAccessKey: this.config.secretAccessKey,
-            }
-          : undefined,
     });
   }
 

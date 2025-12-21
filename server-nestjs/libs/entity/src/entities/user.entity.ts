@@ -40,7 +40,6 @@ export class User extends BaseEntity {
   @Column({ name: 'freeze_account_date', nullable: true })
   freezeAccountDate: Date;
 
-  // Relations
   @OneToMany(() => WorkspaceMember, (member) => member.user)
   workspaces: WorkspaceMember[];
 

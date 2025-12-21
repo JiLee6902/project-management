@@ -3,7 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 
-import { RedisModule, EmailModule } from '@app/external-infra';
+import { RedisModule, EmailModule, BullQueueModule } from '@app/external-infra';
 import { LoggerModule } from '@app/logger';
 import {
   User,
@@ -18,6 +18,7 @@ import {
 } from '@app/entity';
 
 import { TaskReminderModule } from './task-reminder/task-reminder.module';
+import { BloomFilterRebuildModule } from './bloom-filter-rebuild/bloom-filter-rebuild.module';
 
 @Module({
   imports: [
@@ -62,8 +63,10 @@ import { TaskReminderModule } from './task-reminder/task-reminder.module';
     LoggerModule,
     RedisModule,
     EmailModule,
+    BullQueueModule,
 
     TaskReminderModule,
+    BloomFilterRebuildModule,
   ],
 })
 export class CronjobWorkerModule {}

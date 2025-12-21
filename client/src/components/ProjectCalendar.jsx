@@ -3,17 +3,17 @@ import { format, isSameDay, isBefore, startOfMonth, endOfMonth, eachDayOfInterva
 import { CalendarIcon, Clock, User, ChevronLeft, ChevronRight } from "lucide-react";
 
 const typeColors = {
-    BUG: "bg-red-200 text-red-800 dark:bg-red-500 dark:text-red-900",
-    FEATURE: "bg-blue-200 text-blue-800 dark:bg-blue-500 dark:text-blue-900",
-    TASK: "bg-green-200 text-green-800 dark:bg-green-500 dark:text-green-900",
-    IMPROVEMENT: "bg-purple-200 text-purple-800 dark:bg-purple-500 dark:text-purple-900",
-    OTHER: "bg-amber-200 text-amber-800 dark:bg-amber-500 dark:text-amber-900",
+    BUG: "bg-zinc-300 text-zinc-700 dark:bg-zinc-600 dark:text-zinc-200",
+    FEATURE: "bg-zinc-300 text-zinc-700 dark:bg-zinc-600 dark:text-zinc-200",
+    TASK: "bg-zinc-300 text-zinc-700 dark:bg-zinc-600 dark:text-zinc-200",
+    IMPROVEMENT: "bg-zinc-300 text-zinc-700 dark:bg-zinc-600 dark:text-zinc-200",
+    OTHER: "bg-zinc-300 text-zinc-700 dark:bg-zinc-600 dark:text-zinc-200",
 };
 
 const priorityBorders = {
     LOW: "border-zinc-300 dark:border-zinc-600",
-    MEDIUM: "border-amber-300 dark:border-amber-500",
-    HIGH: "border-orange-300 dark:border-orange-500",
+    MEDIUM: "border-zinc-400 dark:border-zinc-500",
+    HIGH: "border-zinc-500 dark:border-zinc-400",
 };
 
 const ProjectCalendar = ({ tasks }) => {
@@ -21,14 +21,14 @@ const ProjectCalendar = ({ tasks }) => {
     const [currentMonth, setCurrentMonth] = useState(new Date());
 
     const today = new Date();
-    const getTasksForDate = (date) => tasks.filter((task) => isSameDay(task.due_date, date));
+    const getTasksForDate = (date) => tasks.filter((task) => task.dueDate && isSameDay(new Date(task.dueDate), date));
 
     const upcomingTasks = tasks
-        .filter((task) => task.due_date && !isBefore(task.due_date, today) && task.status !== "DONE")
-        .sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
+        .filter((task) => task.dueDate && !isBefore(new Date(task.dueDate), today) && task.status !== "DONE")
+        .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
         .slice(0, 5);
 
-    const overdueTasks = tasks.filter((task) => task.due_date && isBefore(task.due_date, today) && task.status !== "DONE");
+    const overdueTasks = tasks.filter((task) => task.dueDate && isBefore(new Date(task.dueDate), today) && task.status !== "DONE");
 
     const daysInMonth = eachDayOfInterval({
         start: startOfMonth(currentMonth),
@@ -71,19 +71,19 @@ const ProjectCalendar = ({ tasks }) => {
                         {daysInMonth.map((day) => {
                             const dayTasks = getTasksForDate(day);
                             const isSelected = isSameDay(day, selectedDate);
-                            const hasOverdue = dayTasks.some((t) => t.status !== "DONE" && isBefore(t.due_date, today));
+                            const hasOverdue = dayTasks.some((t) => t.status !== "DONE" && t.dueDate && isBefore(new Date(t.dueDate), today));
 
                             return (
                                 <button
                                     key={day}
                                     onClick={() => setSelectedDate(day)}
                                     className={`sm:h-14 rounded-md flex flex-col items-center justify-center text-sm
-                                    ${isSelected ? "bg-blue-200 text-blue-900 dark:bg-blue-600 dark:text-white" : "bg-zinc-50 text-zinc-900 dark:bg-zinc-800/40 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700"}
-                                    ${hasOverdue ? "border border-red-300 dark:border-red-500" : ""}`}
+                                    ${isSelected ? "bg-zinc-300 text-zinc-900 dark:bg-zinc-600 dark:text-white" : "bg-zinc-50 text-zinc-900 dark:bg-zinc-800/40 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700"}
+                                    ${hasOverdue ? "border border-zinc-400 dark:border-zinc-500" : ""}`}
                                 >
                                     <span>{format(day, "d")}</span>
                                     {dayTasks.length > 0 && (
-                                        <span className="text-[10px] text-blue-700 dark:text-blue-400">{dayTasks.length} tasks</span>
+                                        <span className="text-[10px] text-zinc-600 dark:text-zinc-400">{dayTasks.length} tasks</span>
                                     )}
                                 </button>
                             );
@@ -147,7 +147,7 @@ const ProjectCalendar = ({ tasks }) => {
                                             {task.type}
                                         </span>
                                     </div>
-                                    <p className="text-xs text-zinc-600 dark:text-zinc-400">{format(task.due_date, "MMM d")}</p>
+                                    <p className="text-xs text-zinc-600 dark:text-zinc-400">{format(new Date(task.dueDate), "MMM d")}</p>
                                 </div>
                             ))}
                         </div>
@@ -156,21 +156,21 @@ const ProjectCalendar = ({ tasks }) => {
 
                 {/* Overdue Tasks */}
                 {overdueTasks.length > 0 && (
-                    <div className="bg-white dark:bg-zinc-950  border border-red-300 dark:border-red-500 border-l-4 rounded-lg p-4">
-                        <h3 className="text-red-700 dark:text-red-400 text-sm flex items-center gap-2 mb-3">
+                    <div className="bg-white dark:bg-zinc-950 border border-zinc-400 dark:border-zinc-500 border-l-4 rounded-lg p-4">
+                        <h3 className="text-zinc-700 dark:text-zinc-300 text-sm flex items-center gap-2 mb-3">
                             <Clock className="w-4 h-4" /> Overdue Tasks ({overdueTasks.length})
                         </h3>
                         <div className="space-y-2">
                             {overdueTasks.slice(0, 5).map((task) => (
-                                <div key={task.id} className="bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 p-3 rounded-lg transition" >
+                                <div key={task.id} className="bg-zinc-100 dark:bg-zinc-800/50 hover:bg-zinc-200 dark:hover:bg-zinc-800 p-3 rounded-lg transition" >
                                     <div className="flex justify-between text-sm text-zinc-900 dark:text-white">
                                         <span>{task.title}</span>
-                                        <span className="text-xs px-2 py-0.5 rounded bg-red-200 dark:bg-red-500 text-red-900 dark:text-red-900">
+                                        <span className="text-xs px-2 py-0.5 rounded bg-zinc-300 dark:bg-zinc-600 text-zinc-700 dark:text-zinc-200">
                                             {task.type}
                                         </span>
                                     </div>
-                                    <p className="text-xs text-red-600 dark:text-red-300">
-                                        Due {format(task.due_date, "MMM d")}
+                                    <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                                        Due {format(new Date(task.dueDate), "MMM d")}
                                     </p>
                                 </div>
                             ))}

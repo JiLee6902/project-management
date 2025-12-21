@@ -18,7 +18,6 @@ export class UserRefreshToken extends BaseEntity {
   @Column({ default: false, name: 'is_revoked' })
   isRevoked: boolean;
 
-  // Relations
   @ManyToOne(() => User, (user) => user.refreshTokens, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;

@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { EmailService, NotificationEventDto, NotificationType } from '@app/external-infra';
+import { QueueService, NotificationEventDto, NotificationType } from '@app/external-infra';
 
 @Injectable()
 export class NotificationService {
-  constructor(private readonly emailService: EmailService) {}
+  constructor(private readonly queueService: QueueService) {}
 
   async processNotification(event: NotificationEventDto): Promise<void> {
     console.log(`Processing notification: ${event.type} for user ${event.userId}`);
@@ -28,7 +28,7 @@ export class NotificationService {
 
   private async handleTaskAssigned(event: NotificationEventDto): Promise<void> {
     try {
-      await this.emailService.sendTaskAssignmentEmail({
+      await this.queueService.addTaskAssignmentEmailJob({
         to: event.userEmail,
         userName: event.data?.userName || event.userEmail.split('@')[0],
         taskId: event.data?.taskId,
@@ -39,15 +39,15 @@ export class NotificationService {
         origin: event.data?.origin,
       });
 
-      console.log(`Task assignment email sent to ${event.userEmail}`);
+      console.log(`Task assignment email queued for ${event.userEmail}`);
     } catch (error) {
-      console.error('Failed to send task assignment email:', error);
+      console.error('Failed to queue task assignment email:', error);
     }
   }
 
   private async handleTaskDueReminder(event: NotificationEventDto): Promise<void> {
     try {
-      await this.emailService.sendTaskReminderEmail({
+      await this.queueService.addTaskReminderEmailJob({
         to: event.userEmail,
         userName: event.userEmail.split('@')[0],
         taskTitle: event.data?.taskTitle || event.title,
@@ -55,14 +55,13 @@ export class NotificationService {
         dueDate: event.data?.dueDate || new Date(),
       });
 
-      console.log(`Task reminder email sent to ${event.userEmail}`);
+      console.log(`Task reminder email queued for ${event.userEmail}`);
     } catch (error) {
-      console.error('Failed to send task reminder email:', error);
+      console.error('Failed to queue task reminder email:', error);
     }
   }
 
   private async handleCommentAdded(event: NotificationEventDto): Promise<void> {
-    // TODO: Implement email notification for new comments
     console.log(`Comment notification for user ${event.userId}`);
   }
 }

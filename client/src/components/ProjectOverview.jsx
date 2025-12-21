@@ -7,17 +7,17 @@ import CreateProjectDialog from "./CreateProjectDialog";
 
 const ProjectOverview = () => {
     const statusColors = {
-        PLANNING: "bg-zinc-200 text-zinc-800 dark:bg-zinc-600 dark:text-zinc-200",
-        ACTIVE: "bg-emerald-200 text-emerald-800 dark:bg-emerald-500 dark:text-emerald-900",
-        ON_HOLD: "bg-amber-200 text-amber-800 dark:bg-amber-500 dark:text-amber-900",
-        COMPLETED: "bg-blue-200 text-blue-800 dark:bg-blue-500 dark:text-blue-900",
-        CANCELLED: "bg-red-200 text-red-800 dark:bg-red-500 dark:text-red-900"
+        PLANNING: "bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300",
+        ACTIVE: "bg-zinc-300 text-zinc-800 dark:bg-zinc-600 dark:text-zinc-200",
+        ON_HOLD: "bg-zinc-400 text-zinc-900 dark:bg-zinc-500 dark:text-zinc-100",
+        COMPLETED: "bg-zinc-500 text-white dark:bg-zinc-400 dark:text-zinc-900",
+        CANCELLED: "bg-zinc-600 text-white dark:bg-zinc-300 dark:text-zinc-800"
     };
 
     const priorityColors = {
         LOW: "border-zinc-300 text-zinc-600 dark:border-zinc-600 dark:text-zinc-400",
-        MEDIUM: "border-amber-300 text-amber-700 dark:border-amber-500 dark:text-amber-400",
-        HIGH: "border-green-300 text-green-700 dark:border-green-500 dark:text-green-400",
+        MEDIUM: "border-zinc-400 text-zinc-700 dark:border-zinc-500 dark:text-zinc-300",
+        HIGH: "border-zinc-500 text-zinc-800 dark:border-zinc-400 dark:text-zinc-200",
     };
 
     const currentWorkspace = useSelector((state) => state?.workspace?.currentWorkspace || null);
@@ -44,7 +44,7 @@ const ProjectOverview = () => {
                             <FolderOpen size={32} />
                         </div>
                         <p className="text-zinc-600 dark:text-zinc-400">No projects yet</p>
-                        <button onClick={() => setIsDialogOpen(true)} className="mt-4 px-4 py-2 text-sm bg-gradient-to-br from-blue-500 to-blue-600 text-white dark:text-zinc-200 rounded hover:opacity-90 transition">
+                        <button onClick={() => setIsDialogOpen(true)} className="mt-4 px-4 py-2 text-sm bg-gradient-to-br from-zinc-600 to-zinc-700 hover:from-zinc-700 hover:to-zinc-800 text-white rounded transition">
                             Create your First Project
                         </button>
                         <CreateProjectDialog isDialogOpen={isDialogOpen} setIsDialogOpen={setIsDialogOpen} />
@@ -93,7 +93,7 @@ const ProjectOverview = () => {
                                         <span className="text-zinc-600 dark:text-zinc-400">{project.progress || 0}%</span>
                                     </div>
                                     <div className="w-full bg-zinc-200 dark:bg-zinc-800 rounded h-1.5">
-                                        <div className="h-1.5 bg-blue-500 rounded" style={{ width: `${project.progress || 0}%` }} />
+                                        <div className="h-1.5 bg-zinc-500 dark:bg-zinc-400 rounded" style={{ width: `${project.progress || 0}%` }} />
                                     </div>
                                 </div>
                             </Link>

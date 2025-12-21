@@ -33,7 +33,7 @@ const Team = () => {
                         Manage team members and their contributions
                     </p>
                 </div>
-                <button onClick={() => setIsDialogOpen(true)} className="flex items-center px-5 py-2 rounded text-sm bg-gradient-to-br from-blue-500 to-blue-600 hover:opacity-90 text-white transition" >
+                <button onClick={() => setIsDialogOpen(true)} className="flex items-center px-5 py-2 rounded text-sm bg-gradient-to-br from-zinc-600 to-zinc-700 hover:from-zinc-700 hover:to-zinc-800 text-white transition" >
                     <UserPlus className="w-4 h-4 mr-2" /> Invite Member
                 </button>
                 <InviteMemberDialog isDialogOpen={isDialogOpen} setIsDialogOpen={setIsDialogOpen} />
@@ -48,8 +48,8 @@ const Team = () => {
                             <p className="text-sm text-gray-500 dark:text-zinc-400">Total Members</p>
                             <p className="text-xl font-bold text-gray-900 dark:text-white">{users.length}</p>
                         </div>
-                        <div className="p-3 rounded-xl bg-blue-100 dark:bg-blue-500/10">
-                            <UsersIcon className="size-4 text-blue-500 dark:text-blue-200" />
+                        <div className="p-3 rounded-xl bg-zinc-200 dark:bg-zinc-500/10">
+                            <UsersIcon className="size-4 text-zinc-600 dark:text-zinc-400" />
                         </div>
                     </div>
                 </div>
@@ -63,8 +63,8 @@ const Team = () => {
                                 {projects.filter((p) => p.status !== "CANCELLED" && p.status !== "COMPLETED").length}
                             </p>
                         </div>
-                        <div className="p-3 rounded-xl bg-emerald-100 dark:bg-emerald-500/10">
-                            <Activity className="size-4 text-emerald-500 dark:text-emerald-200" />
+                        <div className="p-3 rounded-xl bg-zinc-200 dark:bg-zinc-500/10">
+                            <Activity className="size-4 text-zinc-600 dark:text-zinc-400" />
                         </div>
                     </div>
                 </div>
@@ -76,8 +76,8 @@ const Team = () => {
                             <p className="text-sm text-gray-500 dark:text-zinc-400">Total Tasks</p>
                             <p className="text-xl font-bold text-gray-900 dark:text-white">{tasks.length}</p>
                         </div>
-                        <div className="p-3 rounded-xl bg-purple-100 dark:bg-purple-500/10">
-                            <Shield className="size-4 text-purple-500 dark:text-purple-200" />
+                        <div className="p-3 rounded-xl bg-zinc-200 dark:bg-zinc-500/10">
+                            <Shield className="size-4 text-zinc-600 dark:text-zinc-400" />
                         </div>
                     </div>
                 </div>
@@ -86,7 +86,7 @@ const Team = () => {
             {/* Search */}
             <div className="relative max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-zinc-400 size-3" />
-                <input placeholder="Search team members..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-8 w-full text-sm rounded-md border border-gray-300 dark:border-zinc-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-400 py-2 focus:outline-none focus:border-blue-500" />
+                <input placeholder="Search team members..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-8 w-full text-sm rounded-md border border-gray-300 dark:border-zinc-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-400 py-2 focus:outline-none focus:border-zinc-400" />
             </div>
 
             {/* Team Members */}
@@ -147,7 +147,7 @@ const Team = () => {
                                             <td className="px-6 py-2.5 whitespace-nowrap">
                                                 <span
                                                     className={`px-2 py-1 text-xs rounded-md ${user.role === "ADMIN"
-                                                            ? "bg-purple-100 dark:bg-purple-500/20 text-purple-500 dark:text-purple-400"
+                                                            ? "bg-zinc-300 dark:bg-zinc-600 text-zinc-700 dark:text-zinc-200"
                                                             : "bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
                                                         }`}
                                                 >
@@ -185,7 +185,7 @@ const Team = () => {
                                     <div>
                                         <span
                                             className={`px-2 py-1 text-xs rounded-md ${user.role === "ADMIN"
-                                                    ? "bg-purple-100 dark:bg-purple-500/20 text-purple-500 dark:text-purple-400"
+                                                    ? "bg-zinc-300 dark:bg-zinc-600 text-zinc-700 dark:text-zinc-200"
                                                     : "bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300"
                                                 }`}
                                         >

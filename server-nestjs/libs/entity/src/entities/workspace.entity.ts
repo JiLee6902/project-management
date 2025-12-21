@@ -25,7 +25,6 @@ export class Workspace extends BaseEntity {
   @Column({ nullable: true, name: 'image_url' })
   imageUrl: string;
 
-  // Relations
   @ManyToOne(() => User, (user) => user.ownedWorkspaces, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'owner_id' })
   owner: User;

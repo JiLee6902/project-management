@@ -8,19 +8,40 @@ import { fetchWorkspaces } from '../features/workspaceSlice'
 import { loadTheme } from '../features/themeSlice'
 import { Loader2Icon } from 'lucide-react'
 import CreateWorkspaceDialog from '../components/CreateWorkspaceDialog'
+import CommandPalette from '../components/CommandPalette'
+import { connectSocket, disconnectSocket } from '../services/socket'
+import { useSocket } from '../hooks/useSocket'
+import { useCommandPalette } from '../hooks/useKeyboardShortcut'
 
 const Layout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const [showCreateWorkspace, setShowCreateWorkspace] = useState(false)
+    const [showCommandPalette, setShowCommandPalette] = useState(false)
     const { user, isLoaded, isSignedIn } = useAuth()
     const { workspaces, loading } = useSelector((state) => state.workspace)
     const dispatch = useDispatch()
     const navigate = useNavigate()
 
-    // Initial load of theme
+    // Initialize Command Palette shortcut (Cmd+K / Ctrl+K)
+    useCommandPalette(setShowCommandPalette)
+
     useEffect(() => {
         dispatch(loadTheme())
     }, [])
+
+    useEffect(() => {
+        if (isSignedIn) {
+            const token = localStorage.getItem('access_token')
+            if (token) {
+                connectSocket(token)
+            }
+        }
+        return () => {
+            disconnectSocket()
+        }
+    }, [isSignedIn])
+
+    useSocket()
 
     // Initial load of workspaces
     useEffect(() => {
@@ -28,6 +49,17 @@ const Layout = () => {
             dispatch(fetchWorkspaces())
         }
     }, [isLoaded, isSignedIn])
+
+    // Auto-open create workspace dialog for new signups
+    useEffect(() => {
+        if (isLoaded && isSignedIn && !loading && workspaces.length === 0) {
+            const isNewSignup = localStorage.getItem('newSignup')
+            if (isNewSignup === 'true') {
+                localStorage.removeItem('newSignup')
+                setShowCreateWorkspace(true)
+            }
+        }
+    }, [isLoaded, isSignedIn, loading, workspaces.length])
 
     // Redirect to login if not signed in
     useEffect(() => {
@@ -39,7 +71,7 @@ const Layout = () => {
     if (!isLoaded) {
         return (
             <div className='flex items-center justify-center h-screen bg-white dark:bg-zinc-950'>
-                <Loader2Icon className="size-7 text-blue-500 animate-spin" />
+                <Loader2Icon className="size-7 text-zinc-500 animate-spin" />
             </div>
         )
     }
@@ -50,7 +82,7 @@ const Layout = () => {
 
     if (loading) return (
         <div className='flex items-center justify-center h-screen bg-white dark:bg-zinc-950'>
-            <Loader2Icon className="size-7 text-blue-500 animate-spin" />
+            <Loader2Icon className="size-7 text-zinc-500 animate-spin" />
         </div>
     )
 
@@ -63,7 +95,7 @@ const Layout = () => {
                 </div>
                 <button
                     onClick={() => setShowCreateWorkspace(true)}
-                    className="px-6 py-3 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:opacity-90 transition"
+                    className="px-6 py-3 bg-gradient-to-br from-zinc-600 to-zinc-700 hover:from-zinc-700 hover:to-zinc-800 text-white rounded-lg transition"
                 >
                     Create Workspace
                 </button>
@@ -73,15 +105,20 @@ const Layout = () => {
     }
 
     return (
-        <div className="flex bg-white dark:bg-zinc-950 text-gray-900 dark:text-slate-100">
-            <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
-            <div className="flex-1 flex flex-col h-screen">
-                <Navbar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
-                <div className="flex-1 h-full p-6 xl:p-10 xl:px-16 overflow-y-scroll">
-                    <Outlet />
+        <>
+            <div className="flex bg-white dark:bg-zinc-950 text-gray-900 dark:text-slate-100">
+                <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
+                <div className="flex-1 flex flex-col h-screen">
+                    <Navbar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
+                    <div className="flex-1 h-full p-6 xl:p-10 xl:px-16 overflow-y-scroll">
+                        <Outlet />
+                    </div>
                 </div>
             </div>
-        </div>
+
+            {/* Command Palette - Cmd+K / Ctrl+K */}
+            <CommandPalette isOpen={showCommandPalette} setIsOpen={setShowCommandPalette} />
+        </>
     )
 }
 

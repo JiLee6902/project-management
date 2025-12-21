@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CheckSquareIcon, ChevronDownIcon, ChevronRightIcon } from 'lucide-react';
+import { CheckSquareIcon, ChevronDownIcon, ChevronRightIcon, ArrowRightIcon } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
@@ -51,6 +51,14 @@ function MyTasksSidebar() {
                     <span className="bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300 text-xs px-2 py-0.5 rounded">
                         {myTasks.length}
                     </span>
+                    <Link
+                        to="/my-tasks"
+                        onClick={(e) => e.stopPropagation()}
+                        className="ml-auto p-1 text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-700 rounded"
+                        title="View all tasks"
+                    >
+                        <ArrowRightIcon className="w-3 h-3" />
+                    </Link>
                 </div>
                 {showMyTasks ? (
                     <ChevronDownIcon className="w-4 h-4 text-gray-500 dark:text-zinc-400" />

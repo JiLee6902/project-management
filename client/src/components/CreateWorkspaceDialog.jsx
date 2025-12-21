@@ -11,15 +11,31 @@ const CreateWorkspaceDialog = ({ isOpen, setIsOpen }) => {
     const [description, setDescription] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Generate slug from name (lowercase, alphanumeric with hyphens)
+    const generateSlug = (text) => {
+        return text
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+            .replace(/\s+/g, '-')          // Replace spaces with hyphens
+            .replace(/-+/g, '-')           // Replace multiple hyphens with single
+            .replace(/^-|-$/g, '');        // Remove leading/trailing hyphens
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!name.trim()) {
             return toast.error("Workspace name is required");
         }
 
+        const slug = generateSlug(name);
+        if (!slug) {
+            return toast.error("Workspace name must contain alphanumeric characters");
+        }
+
         setIsSubmitting(true);
         try {
-            const { data } = await api.post("/workspaces", { name, description });
+            const { data } = await api.post("/workspaces", { name, slug, description });
             dispatch(addWorkspace(data.workspace));
             dispatch(fetchWorkspaces());
             toast.success("Workspace created successfully");
@@ -81,7 +97,7 @@ const CreateWorkspaceDialog = ({ isOpen, setIsOpen }) => {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="px-4 py-2 rounded bg-gradient-to-br from-blue-500 to-blue-600 text-white dark:text-zinc-200 disabled:opacity-50"
+                            className="px-4 py-2 rounded bg-gradient-to-br from-zinc-600 to-zinc-700 hover:from-zinc-700 hover:to-zinc-800 text-white disabled:opacity-50"
                         >
                             {isSubmitting ? "Creating..." : "Create Workspace"}
                         </button>

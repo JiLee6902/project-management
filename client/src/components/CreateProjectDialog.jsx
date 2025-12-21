@@ -57,7 +57,7 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                 <h2 className="text-xl font-medium mb-1">Create New Project</h2>
                 {currentWorkspace && (
                     <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-                        In workspace: <span className="text-blue-600 dark:text-blue-400">{currentWorkspace.name}</span>
+                        In workspace: <span className="text-zinc-800 dark:text-zinc-200 font-medium">{currentWorkspace.name}</span>
                     </p>
                 )}
 
@@ -112,8 +112,21 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                     {/* Lead */}
                     <div>
                         <label className="block text-sm mb-1">Project Lead</label>
-                        <select value={formData.team_lead} onChange={(e) => setFormData({ ...formData, team_lead: e.target.value, team_members: e.target.value ? [...new Set([...formData.team_members, e.target.value])] : formData.team_members, })} className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm" >
-                            <option value="">No lead</option>
+                        <select
+                            value={formData.team_lead}
+                            onChange={(e) => {
+                                const newLead = e.target.value;
+                                // Remove old lead from team_members if exists, add new lead
+                                const filteredMembers = formData.team_members.filter(m => m !== formData.team_lead);
+                                setFormData({
+                                    ...formData,
+                                    team_lead: newLead,
+                                    team_members: filteredMembers
+                                });
+                            }}
+                            className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm"
+                        >
+                            <option value="">Select lead</option>
                             {currentWorkspace?.members?.map((member) => (
                                 <option key={member.user.email} value={member.user.email}>
                                     {member.user.email}
@@ -124,8 +137,10 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
 
                     {/* Team Members */}
                     <div>
-                        <label className="block text-sm mb-1">Team Members</label>
-                        <select className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm"
+                        <label className="block text-sm mb-1">Team Members <span className="text-zinc-400">(optional)</span></label>
+                        <select
+                            className="w-full px-3 py-2 rounded dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 mt-1 text-zinc-900 dark:text-zinc-200 text-sm"
+                            value=""
                             onChange={(e) => {
                                 if (e.target.value && !formData.team_members.includes(e.target.value)) {
                                     setFormData((prev) => ({ ...prev, team_members: [...prev.team_members, e.target.value] }));
@@ -134,9 +149,12 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                         >
                             <option value="">Add team members</option>
                             {currentWorkspace?.members
-                                ?.filter((email) => !formData.team_members.includes(email))
+                                ?.filter((member) =>
+                                    member.user.email !== formData.team_lead &&
+                                    !formData.team_members.includes(member.user.email)
+                                )
                                 .map((member) => (
-                                    <option key={member.user.email} value={member.email}>
+                                    <option key={member.user.email} value={member.user.email}>
                                         {member.user.email}
                                     </option>
                                 ))}
@@ -145,9 +163,9 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                         {formData.team_members.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-2">
                                 {formData.team_members.map((email) => (
-                                    <div key={email} className="flex items-center gap-1 bg-blue-200/50 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-md text-sm" >
+                                    <div key={email} className="flex items-center gap-1 bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 px-2 py-1 rounded-md text-sm" >
                                         {email}
-                                        <button type="button" onClick={() => removeTeamMember(email)} className="ml-1 hover:bg-blue-300/30 dark:hover:bg-blue-500/30 rounded" >
+                                        <button type="button" onClick={() => removeTeamMember(email)} className="ml-1 hover:bg-zinc-300 dark:hover:bg-zinc-600 rounded" >
                                             <XIcon className="w-3 h-3" />
                                         </button>
                                     </div>
@@ -161,7 +179,7 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
                         <button type="button" onClick={() => setIsDialogOpen(false)} className="px-4 py-2 rounded border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-200 dark:hover:bg-zinc-800" >
                             Cancel
                         </button>
-                        <button disabled={isSubmitting || !currentWorkspace} className="px-4 py-2 rounded bg-gradient-to-br from-blue-500 to-blue-600 text-white dark:text-zinc-200" >
+                        <button disabled={isSubmitting || !currentWorkspace} className="px-4 py-2 rounded bg-gradient-to-br from-zinc-600 to-zinc-700 hover:from-zinc-700 hover:to-zinc-800 text-white disabled:opacity-50" >
                             {isSubmitting ? "Creating..." : "Create Project"}
                         </button>
                     </div>

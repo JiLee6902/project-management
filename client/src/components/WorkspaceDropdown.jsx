@@ -36,7 +36,7 @@ function WorkspaceDropdown() {
         <div className="relative m-4" ref={dropdownRef}>
             <button onClick={() => setIsOpen(prev => !prev)} className="w-full flex items-center justify-between p-3 h-auto text-left rounded hover:bg-gray-100 dark:hover:bg-zinc-800" >
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded shadow bg-indigo-600 flex items-center justify-center text-white font-medium">
+                    <div className="w-8 h-8 rounded shadow bg-zinc-600 dark:bg-zinc-500 flex items-center justify-center text-white font-medium">
                         {currentWorkspace?.name?.charAt(0)?.toUpperCase() || 'W'}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -59,7 +59,7 @@ function WorkspaceDropdown() {
                         </p>
                         {workspaces.map((workspace) => (
                             <div key={workspace.id} onClick={() => onSelectWorkspace(workspace.id)} className="flex items-center gap-3 p-2 cursor-pointer rounded hover:bg-gray-100 dark:hover:bg-zinc-800" >
-                                <div className="w-6 h-6 rounded bg-indigo-600 flex items-center justify-center text-white text-xs font-medium">
+                                <div className="w-6 h-6 rounded bg-zinc-600 dark:bg-zinc-500 flex items-center justify-center text-white text-xs font-medium">
                                     {workspace.name?.charAt(0)?.toUpperCase() || 'W'}
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -71,7 +71,7 @@ function WorkspaceDropdown() {
                                     </p>
                                 </div>
                                 {currentWorkspace?.id === workspace.id && (
-                                    <Check className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                                    <Check className="w-4 h-4 text-zinc-600 dark:text-zinc-400 flex-shrink-0" />
                                 )}
                             </div>
                         ))}
@@ -80,7 +80,7 @@ function WorkspaceDropdown() {
                     <hr className="border-gray-200 dark:border-zinc-700" />
 
                     <div onClick={() => { setShowCreateDialog(true); setIsOpen(false); }} className="p-2 cursor-pointer rounded group hover:bg-gray-100 dark:hover:bg-zinc-800" >
-                        <p className="flex items-center text-xs gap-2 my-1 w-full text-blue-600 dark:text-blue-400 group-hover:text-blue-500 dark:group-hover:text-blue-300">
+                        <p className="flex items-center text-xs gap-2 my-1 w-full text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-800 dark:group-hover:text-zinc-200">
                             <Plus className="w-4 h-4" /> Create Workspace
                         </p>
                     </div>

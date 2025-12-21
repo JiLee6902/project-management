@@ -21,7 +21,6 @@ export class StorageService {
 
     const detectedFileType = fileType || this._detectFileType(file.mimetype);
 
-    // Upload to S3
     const { fileKey, url } = await this.s3Service.uploadFile({
       file,
       userId,
@@ -29,7 +28,6 @@ export class StorageService {
       fileType: detectedFileType,
     });
 
-    // Save metadata to database
     const metadata = await this._createMetadata({
       fileKey,
       originalName: file.originalname,
@@ -83,10 +81,8 @@ export class StorageService {
   async deleteFile(fileId: string): Promise<void> {
     const metadata = await this._getFileMetadata(fileId);
 
-    // Delete from S3
     await this.s3Service.deleteFile(metadata.fileKey);
 
-    // Soft delete in database
     await this.fileMetadataRepository.update(fileId, {
       status: FileStatus.FAILED,
       deletedAt: new Date(),

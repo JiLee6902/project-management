@@ -29,7 +29,6 @@ export class WorkspaceMember extends BaseEntity {
   })
   role: WorkspaceRole;
 
-  // Relations
   @ManyToOne(() => User, (user) => user.workspaces, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;

@@ -2,14 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { Task, TaskStatus } from '@app/entity/entities';
-import { EmailService } from '@app/external-infra';
+import { QueueService } from '@app/external-infra';
 
 @Injectable()
 export class TaskReminderService {
   constructor(
     @InjectRepository(Task)
     private readonly taskRepository: Repository<Task>,
-    private readonly emailService: EmailService,
+    private readonly queueService: QueueService,
   ) {}
 
   async sendDueTaskReminders(): Promise<void> {
@@ -20,7 +20,6 @@ export class TaskReminderService {
     const endOfDay = new Date(today);
     endOfDay.setHours(23, 59, 59, 999);
 
-    // Find all tasks due today that are not completed
     const dueTasks = await this.taskRepository.find({
       where: {
         dueDate: Between(startOfDay, endOfDay),
@@ -34,7 +33,7 @@ export class TaskReminderService {
     for (const task of dueTasks) {
       if (task.assignee && task.assignee.email) {
         try {
-          await this.emailService.sendTaskReminderEmail({
+          await this.queueService.addTaskReminderEmailJob({
             to: task.assignee.email,
             userName: task.assignee.name || task.assignee.email,
             taskTitle: task.title,
@@ -42,14 +41,13 @@ export class TaskReminderService {
             dueDate: task.dueDate,
           });
 
-          console.log(`Sent reminder email for task "${task.title}" to ${task.assignee.email}`);
+          console.log(`Queued reminder email for task "${task.title}" to ${task.assignee.email}`);
         } catch (error) {
-          console.error(`Failed to send reminder for task ${task.id}:`, error);
+          console.error(`Failed to queue reminder for task ${task.id}:`, error);
         }
       }
     }
-
-    // Also find tasks that are IN_PROGRESS and due today
+        
     const inProgressTasks = await this.taskRepository.find({
       where: {
         dueDate: Between(startOfDay, endOfDay),
@@ -63,7 +61,7 @@ export class TaskReminderService {
     for (const task of inProgressTasks) {
       if (task.assignee && task.assignee.email) {
         try {
-          await this.emailService.sendTaskReminderEmail({
+          await this.queueService.addTaskReminderEmailJob({
             to: task.assignee.email,
             userName: task.assignee.name || task.assignee.email,
             taskTitle: task.title,
@@ -71,9 +69,9 @@ export class TaskReminderService {
             dueDate: task.dueDate,
           });
 
-          console.log(`Sent reminder email for in-progress task "${task.title}" to ${task.assignee.email}`);
+          console.log(`Queued reminder email for in-progress task "${task.title}" to ${task.assignee.email}`);
         } catch (error) {
-          console.error(`Failed to send reminder for task ${task.id}:`, error);
+          console.error(`Failed to queue reminder for task ${task.id}:`, error);
         }
       }
     }

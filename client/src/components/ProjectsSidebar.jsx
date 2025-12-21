@@ -56,7 +56,6 @@ const ProjectSidebar = () => {
                         {expandedProjects.has(project.id) && (
                             <div className="ml-5 mt-1 space-y-1">
                                 {getProjectSubItems(project.id).map((subItem) => {
-                                    // checking if the current path matches the sub-item's URL
                                     const isActive =
                                         location.pathname === `/projectsDetail` &&
                                         searchParams.get('id') === project.id &&
@@ -67,8 +66,8 @@ const ProjectSidebar = () => {
                                             key={subItem.title}
                                             to={subItem.url}
                                             className={`flex items-center gap-3 px-3 py-1.5 rounded-lg transition-colors duration-200 text-xs ${isActive
-                                                    ? 'bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20'
-                                                    : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800'
+                                                ? 'bg-blue-100 text-blue-600 hover:bg-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20'
+                                                : 'text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-zinc-800'
                                                 }`}
                                         >
                                             <subItem.icon className="size-3" />

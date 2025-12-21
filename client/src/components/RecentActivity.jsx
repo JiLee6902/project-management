@@ -4,17 +4,17 @@ import { format } from "date-fns";
 import { useSelector } from "react-redux";
 
 const typeIcons = {
-    BUG: { icon: Bug, color: "text-red-500 dark:text-red-400" },
-    FEATURE: { icon: Zap, color: "text-blue-500 dark:text-blue-400" },
-    TASK: { icon: Square, color: "text-green-500 dark:text-green-400" },
-    IMPROVEMENT: { icon: MessageSquare, color: "text-amber-500 dark:text-amber-400" },
-    OTHER: { icon: GitCommit, color: "text-purple-500 dark:text-purple-400" },
+    BUG: { icon: Bug, color: "text-zinc-600 dark:text-zinc-400" },
+    FEATURE: { icon: Zap, color: "text-zinc-600 dark:text-zinc-400" },
+    TASK: { icon: Square, color: "text-zinc-600 dark:text-zinc-400" },
+    IMPROVEMENT: { icon: MessageSquare, color: "text-zinc-600 dark:text-zinc-400" },
+    OTHER: { icon: GitCommit, color: "text-zinc-600 dark:text-zinc-400" },
 };
 
 const statusColors = {
-    TODO: "bg-zinc-200 text-zinc-800 dark:bg-zinc-600 dark:text-zinc-200",
-    IN_PROGRESS: "bg-amber-200 text-amber-800 dark:bg-amber-500 dark:text-amber-900",
-    DONE: "bg-emerald-200 text-emerald-800 dark:bg-emerald-500 dark:text-emerald-900",
+    TODO: "bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300",
+    IN_PROGRESS: "bg-zinc-300 text-zinc-800 dark:bg-zinc-600 dark:text-zinc-200",
+    DONE: "bg-zinc-400 text-zinc-900 dark:bg-zinc-500 dark:text-zinc-100",
 };
 
 const RecentActivity = () => {

@@ -4,7 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 
-import { RedisModule, KafkaModule, EmailModule, WebSocketModule } from '@app/external-infra';
+import { RedisModule, KafkaModule, EmailModule, WebSocketModule, BullQueueModule } from '@app/external-infra';
 import { ThrottlerBehindProxyGuard } from '@app/shared-libs';
 import { LoggerModule } from '@app/logger';
 import {
@@ -18,6 +18,20 @@ import {
   Comment,
   FileMetadata,
   Notification,
+  Label,
+  Subtask,
+  Activity,
+  TimeEntry,
+  Sprint,
+  TaskTemplate,
+  SavedFilter,
+  TaskAttachment,
+  TaskDependency,
+  TaskWatcher,
+  CustomField,
+  TaskCustomFieldValue,
+  ProjectTemplate,
+  AutomationRule,
 } from '@app/entity';
 
 import { AuthModule } from './domain/auth/auth.module';
@@ -29,6 +43,18 @@ import { CommentModule } from './domain/comment/comment.module';
 import { UploadModule } from './domain/upload/upload.module';
 import { NotificationModule } from './domain/notification/notification.module';
 import { SearchModule } from './domain/search/search.module';
+import { LabelModule } from './domain/label/label.module';
+import { ActivityModule } from './domain/activity/activity.module';
+import { TimeTrackingModule } from './domain/time-tracking/time-tracking.module';
+import { ExportModule } from './domain/export/export.module';
+import { HealthModule } from './health/health.module';
+import { SprintModule } from './domain/sprint/sprint.module';
+import { TaskTemplateModule } from './domain/task-template/task-template.module';
+import { AttachmentModule } from './domain/attachment/attachment.module';
+import { SavedFilterModule } from './domain/saved-filter/saved-filter.module';
+import { CustomFieldModule } from './domain/custom-field/custom-field.module';
+import { ProjectTemplateModule } from './domain/project-template/project-template.module';
+import { AutomationModule } from './domain/automation/automation.module';
 
 @Module({
   imports: [
@@ -78,6 +104,20 @@ import { SearchModule } from './domain/search/search.module';
           Comment,
           FileMetadata,
           Notification,
+          Label,
+          Subtask,
+          Activity,
+          TimeEntry,
+          Sprint,
+          TaskTemplate,
+          SavedFilter,
+          TaskAttachment,
+          TaskDependency,
+          TaskWatcher,
+          CustomField,
+          TaskCustomFieldValue,
+          ProjectTemplate,
+          AutomationRule,
         ],
         synchronize: configService.get<string>('NODE_ENV') === 'development',
         logging:
@@ -95,12 +135,12 @@ import { SearchModule } from './domain/search/search.module';
       inject: [ConfigService],
     }),
 
-    // Infrastructure
     LoggerModule,
     RedisModule,
     KafkaModule,
     EmailModule,
     WebSocketModule,
+    BullQueueModule,
 
     AuthModule,
     UserModule,
@@ -111,6 +151,18 @@ import { SearchModule } from './domain/search/search.module';
     UploadModule,
     NotificationModule,
     SearchModule,
+    LabelModule,
+    ActivityModule,
+    TimeTrackingModule,
+    ExportModule,
+    HealthModule,
+    SprintModule,
+    TaskTemplateModule,
+    AttachmentModule,
+    SavedFilterModule,
+    CustomFieldModule,
+    ProjectTemplateModule,
+    AutomationModule,
   ],
   providers: [
     {
