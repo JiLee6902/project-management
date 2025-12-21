@@ -58,9 +58,9 @@ USER nestjs
 # Expose port
 EXPOSE ${APP_PORT}
 
-# Health check
+# Health check - using /api endpoint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:${PORT}/health || exit 1
+    CMD curl -f http://localhost:${PORT}/api || exit 1
 
 # Start the application
 CMD ["sh", "-c", "node dist/apps/${APP_NAME}/main.js"]
