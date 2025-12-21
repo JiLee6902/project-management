@@ -33,8 +33,8 @@ jobs:
             set -e
 
             # Create directory if not exists
-            mkdir -p ~/project-management
-            cd ~/project-management
+            mkdir -p ~/app
+            cd ~/app
 
             # Download latest docker-compose.prod.yml
             curl -sO https://raw.githubusercontent.com/JiLee6902/project-management/main/server-nestjs/docker-compose.prod.yml
@@ -84,8 +84,8 @@ jobs:
             set -e
 
             # Create directory if not exists
-            mkdir -p ~/project-management
-            cd ~/project-management
+            mkdir -p ~/app
+            cd ~/app
 
             # Download latest docker-compose.prod.yml
             curl -sO https://raw.githubusercontent.com/JiLee6902/project-management/main/server-nestjs/docker-compose.prod.yml
@@ -132,8 +132,8 @@ jobs:
             set -e
 
             # Create directory if not exists
-            mkdir -p ~/project-management
-            cd ~/project-management
+            mkdir -p ~/app
+            cd ~/app
 
             # Download latest docker-compose.prod.yml
             curl -sO https://raw.githubusercontent.com/JiLee6902/project-management/main/server-nestjs/docker-compose.prod.yml
