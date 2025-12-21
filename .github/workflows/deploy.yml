@@ -52,10 +52,10 @@ jobs:
             export REGISTRY="${{ env.REGISTRY }}"
 
             echo "Pulling pm-${{ github.event.inputs.app }}..."
-            docker compose -f docker-compose.prod.yml pull ${{ github.event.inputs.app }}
+            docker compose --env-file .env.production -f docker-compose.prod.yml pull ${{ github.event.inputs.app }}
 
             echo "Restarting ${{ github.event.inputs.app }}..."
-            docker compose -f docker-compose.prod.yml up -d ${{ github.event.inputs.app }}
+            docker compose --env-file .env.production -f docker-compose.prod.yml up -d ${{ github.event.inputs.app }}
 
             echo "Cleanup old images..."
             docker image prune -af --filter "until=72h"
@@ -103,10 +103,10 @@ jobs:
             export REGISTRY="${{ env.REGISTRY }}"
 
             echo "Pulling all services..."
-            docker compose -f docker-compose.prod.yml pull app-api notification cronjob-worker
+            docker compose --env-file .env.production -f docker-compose.prod.yml pull app-api notification cronjob-worker
 
             echo "Restarting all services..."
-            docker compose -f docker-compose.prod.yml up -d app-api notification cronjob-worker
+            docker compose --env-file .env.production -f docker-compose.prod.yml up -d app-api notification cronjob-worker
 
             echo "Cleanup old images..."
             docker image prune -af --filter "until=72h"
@@ -145,13 +145,13 @@ jobs:
             fi
 
             echo "Starting infrastructure services..."
-            docker compose -f docker-compose.prod.yml up -d postgres redis zookeeper kafka
+            docker compose --env-file .env.production -f docker-compose.prod.yml up -d postgres redis zookeeper kafka
 
             echo "Waiting for services to be healthy..."
             sleep 30
 
             echo "Infrastructure deployed!"
-            docker compose -f docker-compose.prod.yml ps
+            docker compose --env-file .env.production -f docker-compose.prod.yml ps
 
       - name: Summary
         run: |
