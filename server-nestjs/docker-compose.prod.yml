@@ -72,7 +72,7 @@ services:
     container_name: pm-zookeeper
     restart: unless-stopped
     environment:
-      KAFKA_HEAP_OPTS: "-Xmx128M -Xms128M"
+      KAFKA_HEAP_OPTS: "-Xmx64M -Xms64M"
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
       ZOOKEEPER_SYNC_LIMIT: 2
@@ -101,7 +101,7 @@ services:
     depends_on:
       - zookeeper
     environment:
-      KAFKA_HEAP_OPTS: "-Xmx256M -Xms256M"
+      KAFKA_HEAP_OPTS: "-Xmx128M -Xms128M"
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092
