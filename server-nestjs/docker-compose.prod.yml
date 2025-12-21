@@ -1,6 +1,37 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: pm-postgres
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - pm_network
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+        compress: "true"
+
   redis:
     image: redis:7-alpine
     container_name: pm-redis
@@ -114,6 +145,7 @@ services:
     env_file:
       - .env.production
     depends_on:
+      - postgres
       - redis
       - kafka
     ports:
@@ -153,6 +185,7 @@ services:
     env_file:
       - .env.production
     depends_on:
+      - postgres
       - redis
       - kafka
     ports:
@@ -189,6 +222,7 @@ services:
     env_file:
       - .env.production
     depends_on:
+      - postgres
       - redis
       - kafka
     environment:
@@ -215,6 +249,7 @@ services:
         compress: "true"
 
 volumes:
+  postgres_data:
   redis_data:
   zookeeper_data:
   zookeeper_logs:
