@@ -72,9 +72,11 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      // Clear all auth-related localStorage
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(REFRESH_TOKEN_KEY);
       localStorage.removeItem(USER_KEY);
+      localStorage.removeItem('currentWorkspaceId');
       setUser(null);
       setIsSignedIn(false);
     }

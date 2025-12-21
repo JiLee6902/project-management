@@ -2,12 +2,15 @@ import { useEffect, useState } from "react";
 import { UserIcon, Shield, Save, LogOut, AlertTriangle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { resetWorkspaceState } from "../features/workspaceSlice";
 import toast from "react-hot-toast";
 import api from "../configs/api";
 
 export default function Settings() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const dispatch = useDispatch();
 
     const [profileData, setProfileData] = useState({ name: "" });
     const [isUpdating, setIsUpdating] = useState(false);
@@ -38,6 +41,7 @@ export default function Settings() {
         setIsLoggingOut(true);
         try {
             await logout();
+            dispatch(resetWorkspaceState());
             navigate("/login");
         } finally {
             setIsLoggingOut(false);

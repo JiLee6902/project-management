@@ -36,7 +36,7 @@ const CreateWorkspaceDialog = ({ isOpen, setIsOpen }) => {
         setIsSubmitting(true);
         try {
             const { data } = await api.post("/workspaces", { name, slug, description });
-            dispatch(addWorkspace(data.workspace));
+            dispatch(addWorkspace(data));
             dispatch(fetchWorkspaces());
             toast.success("Workspace created successfully");
             setIsOpen(false);

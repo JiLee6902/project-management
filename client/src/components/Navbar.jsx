@@ -1,6 +1,7 @@
 import { PanelLeft, LogOut, User, AlertTriangle } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import { toggleTheme } from '../features/themeSlice'
+import { resetWorkspaceState } from '../features/workspaceSlice'
 import { MoonIcon, SunIcon } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useState, useRef, useEffect } from 'react'
@@ -33,6 +34,7 @@ const Navbar = ({ setIsSidebarOpen }) => {
         setIsLoggingOut(true);
         try {
             await logout();
+            dispatch(resetWorkspaceState());
             navigate('/login');
         } finally {
             setIsLoggingOut(false);
