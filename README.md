@@ -31,7 +31,6 @@ A full-stack project management application with multiple backend implementation
 ```
 project-management/
 ├── client/                 # React frontend
-├── server/                 # Express.js backend
 └── server-nestjs/          # NestJS microservices backend
     ├── apps/
     │   ├── app-api/
@@ -55,13 +54,6 @@ project-management/
 cd client
 npm install
 npm run dev
-```
-
-#### Server (Express)
-```bash
-cd server
-npm install
-npm run server
 ```
 
 #### Server NestJS
