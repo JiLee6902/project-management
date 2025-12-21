@@ -45,7 +45,8 @@ jobs:
       - name: Build and Push
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./server-nestjs
+          file: ./server-nestjs/Dockerfile
           push: true
           build-args: |
             APP_NAME=${{ github.event.inputs.app }}
@@ -92,7 +93,8 @@ jobs:
       - name: Build and Push ${{ matrix.app }}
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./server-nestjs
+          file: ./server-nestjs/Dockerfile
           push: true
           build-args: |
             APP_NAME=${{ matrix.app }}
