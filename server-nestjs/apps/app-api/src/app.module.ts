@@ -119,7 +119,7 @@ import { AutomationModule } from './domain/automation/automation.module';
           ProjectTemplate,
           AutomationRule,
         ],
-        synchronize: configService.get<string>('NODE_ENV') === 'development',
+        synchronize: configService.get<string>('TYPEORM_SYNCHRONIZE') === 'true' || configService.get<string>('NODE_ENV') === 'development',
         logging:
           configService.get<string>('NODE_ENV') === 'production'
             ? ['error', 'warn']

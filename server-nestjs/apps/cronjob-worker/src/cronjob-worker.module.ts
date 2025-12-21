@@ -47,7 +47,7 @@ import { BloomFilterRebuildModule } from './bloom-filter-rebuild/bloom-filter-re
           Comment,
           FileMetadata,
         ],
-        synchronize: false,
+        synchronize: configService.get<string>('TYPEORM_SYNCHRONIZE') === 'true',
         extra: {
           max: configService.get<number>('DB_POOL_MAX', 20),
           min: configService.get<number>('DB_POOL_MIN', 5),
