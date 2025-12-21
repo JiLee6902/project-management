@@ -32,7 +32,18 @@ jobs:
           script: |
             set -e
 
+            # Create directory if not exists
+            mkdir -p ~/project-management
             cd ~/project-management
+
+            # Download latest docker-compose.prod.yml
+            curl -sO https://raw.githubusercontent.com/JiLee6902/project-management/main/server-nestjs/docker-compose.prod.yml
+
+            # Check .env.production exists
+            if [ ! -f .env.production ]; then
+              echo "ERROR: .env.production not found! Please create it first."
+              exit 1
+            fi
 
             echo "Docker Login..."
             echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
@@ -47,10 +58,6 @@ jobs:
             docker compose -f docker-compose.prod.yml up -d ${{ github.event.inputs.app }}
 
             echo "Cleanup old images..."
-            docker images ${{ env.REGISTRY }}/pm-${{ github.event.inputs.app }} --format "{{.ID}} {{.CreatedAt}}" | \
-              sort -rk 2 | \
-              awk 'NR>3{print $1}' | \
-              xargs -r docker rmi 2>/dev/null || true
             docker image prune -af --filter "until=72h"
 
             echo "${{ github.event.inputs.app }} deployed successfully!"
@@ -76,7 +83,18 @@ jobs:
           script: |
             set -e
 
+            # Create directory if not exists
+            mkdir -p ~/project-management
             cd ~/project-management
+
+            # Download latest docker-compose.prod.yml
+            curl -sO https://raw.githubusercontent.com/JiLee6902/project-management/main/server-nestjs/docker-compose.prod.yml
+
+            # Check .env.production exists
+            if [ ! -f .env.production ]; then
+              echo "ERROR: .env.production not found! Please create it first."
+              exit 1
+            fi
 
             echo "Docker Login..."
             echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
@@ -113,7 +131,18 @@ jobs:
           script: |
             set -e
 
+            # Create directory if not exists
+            mkdir -p ~/project-management
             cd ~/project-management
+
+            # Download latest docker-compose.prod.yml
+            curl -sO https://raw.githubusercontent.com/JiLee6902/project-management/main/server-nestjs/docker-compose.prod.yml
+
+            # Check .env.production exists
+            if [ ! -f .env.production ]; then
+              echo "ERROR: .env.production not found! Please create it first."
+              exit 1
+            fi
 
             echo "Starting infrastructure services..."
             docker compose -f docker-compose.prod.yml up -d redis zookeeper kafka
