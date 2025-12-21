@@ -29,11 +29,15 @@ export class ProjectService implements OnModuleInit {
   }
 
   private async initBloomFilter() {
-    const projects = await this.projectRepository.findAll();
-    if (projects.length > 0) {
-      const projectIds = projects.map((p) => p.id);
-      await this.bloomFilter.addMany(BLOOM_FILTER_NAME, projectIds);
-      console.log(`Bloom Filter initialized with ${projectIds.length} projects`);
+    try {
+      const projects = await this.projectRepository.findAll();
+      if (projects.length > 0) {
+        const projectIds = projects.map((p) => p.id);
+        await this.bloomFilter.addMany(BLOOM_FILTER_NAME, projectIds);
+        console.log(`Bloom Filter initialized with ${projectIds.length} projects`);
+      }
+    } catch (error) {
+      console.warn('Bloom Filter init skipped - table may not exist yet:', error.message);
     }
   }
 
