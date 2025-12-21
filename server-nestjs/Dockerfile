@@ -44,9 +44,10 @@ ARG APP_PORT=3000
 # Copy built application
 COPY --from=builder /app/dist ./dist
 
-# Set environment variables
+# Set environment variables (ARG -> ENV for runtime)
 ENV NODE_ENV=production
 ENV PORT=${APP_PORT}
+ENV APP_NAME=${APP_NAME}
 
 # Change ownership
 RUN chown -R nestjs:nodejs /app
