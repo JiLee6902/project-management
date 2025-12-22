@@ -9,6 +9,7 @@ import TaskDetails from './pages/TaskDetails'
 import Settings from './pages/Settings'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import AuthCallback from './pages/AuthCallback'
 import MyTasks from './pages/MyTasks'
 import { useAuth } from './context/AuthContext'
 
@@ -41,6 +42,7 @@ const App = () => {
                         <Register />
                     </PublicRoute>
                 } />
+                <Route path="/auth/callback" element={<AuthCallback />} />
 
                 {/* Protected routes - Layout handles auth check */}
                 <Route path="/" element={<Layout />}>

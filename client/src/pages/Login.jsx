@@ -6,6 +6,13 @@ import { resetWorkspaceState } from '../features/workspaceSlice';
 import toast from 'react-hot-toast';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 
+// Get the API base URL for OAuth (without /apila suffix)
+const getOAuthBaseUrl = () => {
+  const baseUrl = import.meta.env.VITE_BASEURL || 'http://localhost:3000/api';
+  // Remove /apila suffix if present to get base API URL
+  return baseUrl.replace(/\/apila$/, '/api');
+};
+
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,6 +38,14 @@ export default function Login() {
     }
 
     setLoading(false);
+  };
+
+  const handleGoogleLogin = () => {
+    window.location.href = `${getOAuthBaseUrl()}/auth/google`;
+  };
+
+  const handleGithubLogin = () => {
+    window.location.href = `${getOAuthBaseUrl()}/auth/github`;
   };
 
   return (
@@ -206,6 +221,7 @@ export default function Login() {
           <div className="grid grid-cols-2 gap-4">
             <button
               type="button"
+              onClick={handleGoogleLogin}
               className="flex items-center justify-center gap-2 py-3 px-4 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-700 dark:text-zinc-300 font-medium hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -218,6 +234,7 @@ export default function Login() {
             </button>
             <button
               type="button"
+              onClick={handleGithubLogin}
               className="flex items-center justify-center gap-2 py-3 px-4 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl text-zinc-700 dark:text-zinc-300 font-medium hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-all"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">

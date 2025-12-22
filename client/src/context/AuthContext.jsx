@@ -106,6 +106,15 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const setAuthFromOAuth = ({ accessToken, refreshToken, user: userData }) => {
+    localStorage.setItem(TOKEN_KEY, accessToken);
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    localStorage.setItem(USER_KEY, JSON.stringify(userData));
+
+    setUser(userData);
+    setIsSignedIn(true);
+  };
+
   const value = {
     user,
     isLoaded,
@@ -115,6 +124,7 @@ export function AuthProvider({ children }) {
     logout,
     getToken,
     refreshAccessToken,
+    setAuthFromOAuth,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

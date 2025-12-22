@@ -10,12 +10,17 @@ import { RolesGuard } from '@app/shared-libs';
 
 import { AuthPublicController } from './controller/auth-public.controller';
 import { AuthPrivateController } from './controller/auth-private.controller';
+import { AuthOAuthController } from './controller/auth-oauth.controller';
 import { AuthService } from './service/auth.service';
 import { TokenService } from './service/token.service';
 import { AuthRepository } from './repository/auth.repository';
 import { TokenRepository } from './repository/token.repository';
 import { JwtStrategy } from './strategy/jwt.strategy';
+import { GoogleStrategy } from './strategy/google.strategy';
+import { GithubStrategy } from './strategy/github.strategy';
 import { JwtAuthGuard } from './guard/jwt-auth.guard';
+import { GoogleAuthGuard } from './guard/google-auth.guard';
+import { GithubAuthGuard } from './guard/github-auth.guard';
 
 @Module({
   imports: [
@@ -35,14 +40,18 @@ import { JwtAuthGuard } from './guard/jwt-auth.guard';
     TypeOrmModule.forFeature([User, UserRefreshToken]),
     RedisModule,
   ],
-  controllers: [AuthPublicController, AuthPrivateController],
+  controllers: [AuthPublicController, AuthPrivateController, AuthOAuthController],
   providers: [
     AuthService,
     AuthRepository,
     TokenService,
     TokenRepository,
     JwtStrategy,
+    GoogleStrategy,
+    GithubStrategy,
     JwtAuthGuard,
+    GoogleAuthGuard,
+    GithubAuthGuard,
     RolesGuard,
   ],
   exports: [JwtAuthGuard, RolesGuard, AuthService],

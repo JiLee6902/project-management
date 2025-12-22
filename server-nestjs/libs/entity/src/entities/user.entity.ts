@@ -15,14 +15,30 @@ export enum UserStatus {
   DELETED = 'DELETED',
 }
 
+export enum AuthProvider {
+  LOCAL = 'LOCAL',
+  GOOGLE = 'GOOGLE',
+  GITHUB = 'GITHUB',
+}
+
 @Entity('users')
 export class User extends BaseEntity {
   @Column({ unique: true })
   @Index()
   email: string;
 
-  @Column()
+  @Column({ nullable: true })
   password: string;
+
+  @Column({
+    type: 'enum',
+    enum: AuthProvider,
+    default: AuthProvider.LOCAL,
+  })
+  provider: AuthProvider;
+
+  @Column({ name: 'provider_id', nullable: true })
+  providerId: string;
 
   @Column({ nullable: true })
   name: string;

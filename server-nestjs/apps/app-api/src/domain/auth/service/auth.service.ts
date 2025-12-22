@@ -2,11 +2,18 @@ import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User } from '@app/entity/entities';
+import { User, AuthProvider } from '@app/entity/entities';
 import { RedisService } from '@app/external-infra';
 import { AuthRepository } from '../repository/auth.repository';
 import { TokenService } from './token.service';
 import { RegisterDto, LoginDto, RefreshTokenDto, LoginResponseDto } from '../dto';
+
+export interface OAuthUserData {
+  email: string;
+  name: string;
+  picture: string;
+  providerId: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -183,6 +190,55 @@ export class AuthService {
       await this.tokenService.revokeRefreshTokenByJti(decodedToken.jti, queryRunner);
 
       // Generate new tokens
+      const [accessToken, refreshToken] = await Promise.all([
+        this.tokenService.generateAccessToken(user),
+        this.tokenService.generateRefreshToken(user, queryRunner),
+      ]);
+
+      await queryRunner.commitTransaction();
+
+      return {
+        accessToken,
+        refreshToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        },
+      };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async oauthLogin(
+    userData: OAuthUserData,
+    provider: AuthProvider,
+  ): Promise<LoginResponseDto> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      if (!userData.email) {
+        throw new BadRequestException('Email is required from OAuth provider');
+      }
+
+      const { user } = await this.authRepo.findOrCreateOAuthUser(
+        {
+          email: userData.email,
+          name: userData.name,
+          image: userData.picture,
+          provider,
+          providerId: userData.providerId,
+        },
+        queryRunner,
+      );
+
+      // Generate tokens
       const [accessToken, refreshToken] = await Promise.all([
         this.tokenService.generateAccessToken(user),
         this.tokenService.generateRefreshToken(user, queryRunner),
