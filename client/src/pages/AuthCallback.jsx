@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { useAuth } from '../context/AuthContext';
@@ -10,58 +10,63 @@ export default function AuthCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { setAuthFromOAuth } = useAuth();
+  const { setAuthFromOAuth, isSignedIn } = useAuth();
   const [error, setError] = useState(null);
+  const [authCompleted, setAuthCompleted] = useState(false);
+  const hasProcessed = useRef(false);
 
+  // Process OAuth callback once
   useEffect(() => {
-    const handleCallback = async () => {
-      const accessToken = searchParams.get('accessToken');
-      const refreshToken = searchParams.get('refreshToken');
-      const userId = searchParams.get('userId');
-      const email = searchParams.get('email');
-      const name = searchParams.get('name');
-      const errorParam = searchParams.get('error');
+    if (hasProcessed.current) return;
 
-      if (errorParam) {
-        setError(decodeURIComponent(errorParam));
-        toast.error('Authentication failed');
-        setTimeout(() => navigate('/login'), 2000);
-        return;
-      }
+    const accessToken = searchParams.get('accessToken');
+    const refreshToken = searchParams.get('refreshToken');
+    const userId = searchParams.get('userId');
+    const email = searchParams.get('email');
+    const name = searchParams.get('name');
+    const errorParam = searchParams.get('error');
 
-      if (!accessToken || !refreshToken || !userId || !email) {
-        setError('Invalid callback parameters');
-        toast.error('Authentication failed');
-        setTimeout(() => navigate('/login'), 2000);
-        return;
-      }
+    if (errorParam) {
+      hasProcessed.current = true;
+      setError(decodeURIComponent(errorParam));
+      toast.error('Authentication failed');
+      setTimeout(() => navigate('/login'), 2000);
+      return;
+    }
 
-      try {
-        // Store auth data
-        setAuthFromOAuth({
-          accessToken,
-          refreshToken,
-          user: {
-            id: userId,
-            email: decodeURIComponent(email),
-            name: name ? decodeURIComponent(name) : undefined,
-          },
-        });
+    if (!accessToken || !refreshToken || !userId || !email) {
+      hasProcessed.current = true;
+      setError('Invalid callback parameters');
+      toast.error('Authentication failed');
+      setTimeout(() => navigate('/login'), 2000);
+      return;
+    }
 
-        // Clear old workspace state
-        dispatch(resetWorkspaceState());
+    hasProcessed.current = true;
 
-        toast.success('Login successful!');
-        navigate('/');
-      } catch (err) {
-        setError('Failed to complete authentication');
-        toast.error('Authentication failed');
-        setTimeout(() => navigate('/login'), 2000);
-      }
-    };
+    // Store auth data
+    setAuthFromOAuth({
+      accessToken,
+      refreshToken,
+      user: {
+        id: userId,
+        email: decodeURIComponent(email),
+        name: name ? decodeURIComponent(name) : undefined,
+      },
+    });
 
-    handleCallback();
-  }, [searchParams, navigate, dispatch, setAuthFromOAuth]);
+    // Clear old workspace state
+    dispatch(resetWorkspaceState());
+    setAuthCompleted(true);
+  }, [searchParams, dispatch, setAuthFromOAuth, navigate]);
+
+  // Navigate after auth state is updated
+  useEffect(() => {
+    if (authCompleted && isSignedIn) {
+      toast.success('Login successful!');
+      navigate('/');
+    }
+  }, [authCompleted, isSignedIn, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white dark:bg-zinc-950">
