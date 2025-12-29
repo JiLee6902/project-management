@@ -42,6 +42,10 @@ export class WorkspaceRepository {
     return this.workspaceRepository.findOne({ where: { slug } });
   }
 
+  async findByNameAndOwner(name: string, ownerId: string): Promise<Workspace | null> {
+    return this.workspaceRepository.findOne({ where: { name, ownerId } });
+  }
+
   async create(data: Partial<Workspace>): Promise<Workspace> {
     const workspace = this.workspaceRepository.create(data);
     return this.workspaceRepository.save(workspace);

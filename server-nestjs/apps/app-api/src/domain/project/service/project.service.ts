@@ -47,6 +47,12 @@ export class ProjectService implements OnModuleInit {
       throw new ForbiddenException('Only workspace admin can create projects');
     }
 
+    // Check for duplicate project name in workspace
+    const existingProject = await this.projectRepository.findByNameAndWorkspace(dto.name, dto.workspaceId);
+    if (existingProject) {
+      throw new BadRequestException('Project name already exists in this workspace');
+    }
+
     let teamLeadId: string = userId; 
     if (dto.teamLeadEmail) {
       const teamLead = await this.projectRepository.findUserByEmail(dto.teamLeadEmail);
@@ -134,6 +140,14 @@ export class ProjectService implements OnModuleInit {
     const isAdmin = await this.projectRepository.isWorkspaceAdmin(project.workspaceId, userId);
     if (!isAdmin && project.teamLead !== userId) {
       throw new ForbiddenException('Only workspace admin or team lead can update project');
+    }
+
+    // Check for duplicate project name in workspace when updating name
+    if (dto.name && dto.name !== project.name) {
+      const existingProject = await this.projectRepository.findByNameAndWorkspace(dto.name, project.workspaceId);
+      if (existingProject) {
+        throw new BadRequestException('Project name already exists in this workspace');
+      }
     }
 
     const updateData: any = { ...dto };

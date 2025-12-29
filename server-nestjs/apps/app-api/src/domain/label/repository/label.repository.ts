@@ -43,6 +43,12 @@ export class LabelRepository {
     });
   }
 
+  async findByNameAndWorkspace(name: string, workspaceId: string): Promise<Label | null> {
+    return this.labelRepository.findOne({
+      where: { name, workspaceId },
+    });
+  }
+
   async update(id: string, dto: UpdateLabelDto, userId: string): Promise<Label | null> {
     await this.labelRepository.update(id, {
       ...dto,

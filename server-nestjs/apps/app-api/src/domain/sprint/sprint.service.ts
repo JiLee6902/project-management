@@ -119,6 +119,14 @@ export class SprintService {
       throw new ForbiddenException('Only workspace admin or team lead can create sprints');
     }
 
+    // Check for duplicate sprint name in project
+    const existingSprint = await this.sprintRepository.findOne({
+      where: { name: dto.name, projectId: dto.projectId },
+    });
+    if (existingSprint) {
+      throw new BadRequestException('Sprint name already exists in this project');
+    }
+
     const sprint = this.sprintRepository.create({
       name: dto.name,
       goal: dto.goal,
@@ -148,6 +156,16 @@ export class SprintService {
     const isAdmin = await this.isWorkspaceAdmin(project.workspaceId, userId);
     if (!isAdmin && project.teamLead !== userId) {
       throw new ForbiddenException('Only workspace admin or team lead can update sprints');
+    }
+
+    // Check for duplicate sprint name in project when updating name
+    if (dto.name && dto.name !== sprint.name) {
+      const existingSprint = await this.sprintRepository.findOne({
+        where: { name: dto.name, projectId: sprint.projectId },
+      });
+      if (existingSprint) {
+        throw new BadRequestException('Sprint name already exists in this project');
+      }
     }
 
     await this.sprintRepository.update(id, {

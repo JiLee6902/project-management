@@ -48,6 +48,12 @@ export class WorkspaceService {
       throw new BadRequestException('Workspace slug already exists');
     }
 
+    // Check for duplicate workspace name for the same owner
+    const existingName = await this.workspaceRepository.findByNameAndOwner(dto.name, userId);
+    if (existingName) {
+      throw new BadRequestException('You already have a workspace with this name');
+    }
+
     const workspace = await this.workspaceRepository.create({
       name: dto.name,
       slug: dto.slug,
@@ -71,6 +77,14 @@ export class WorkspaceService {
     const member = await this.workspaceRepository.findMember(workspaceId, userId);
     if (!member || member.role !== WorkspaceRole.ADMIN) {
       throw new ForbiddenException('Only workspace admin can update workspace');
+    }
+
+    // Check for duplicate workspace name for the same owner when updating name
+    if (dto.name && dto.name !== workspace.name) {
+      const existingName = await this.workspaceRepository.findByNameAndOwner(dto.name, workspace.ownerId);
+      if (existingName) {
+        throw new BadRequestException('A workspace with this name already exists');
+      }
     }
 
     await this.workspaceRepository.update(workspaceId, dto);

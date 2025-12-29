@@ -23,6 +23,12 @@ export class ProjectRepository {
     });
   }
 
+  async findByNameAndWorkspace(name: string, workspaceId: string): Promise<Project | null> {
+    return this.projectRepository.findOne({
+      where: { name, workspaceId },
+    });
+  }
+
   async findAll(): Promise<Project[]> {
     return this.projectRepository.find({ select: ['id'] });
   }

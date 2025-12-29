@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { LabelRepository } from '../repository/label.repository';
 import { CreateLabelDto, UpdateLabelDto } from '../dto';
 import { Label } from '@app/entity/entities';
@@ -12,6 +12,12 @@ export class LabelService {
     const isMember = await this.labelRepository.isWorkspaceMember(dto.workspaceId, userId);
     if (!isMember) {
       throw new ForbiddenException('You are not a member of this workspace');
+    }
+
+    // Check for duplicate label name in workspace
+    const existingLabel = await this.labelRepository.findByNameAndWorkspace(dto.name, dto.workspaceId);
+    if (existingLabel) {
+      throw new BadRequestException('Label name already exists in this workspace');
     }
 
     return this.labelRepository.create(dto, userId);
@@ -42,6 +48,14 @@ export class LabelService {
     const isMember = await this.labelRepository.isWorkspaceMember(label.workspaceId, userId);
     if (!isMember) {
       throw new ForbiddenException('You are not a member of this workspace');
+    }
+
+    // Check for duplicate label name in workspace when updating name
+    if (dto.name && dto.name !== label.name) {
+      const existingLabel = await this.labelRepository.findByNameAndWorkspace(dto.name, label.workspaceId);
+      if (existingLabel) {
+        throw new BadRequestException('Label name already exists in this workspace');
+      }
     }
 
     const updated = await this.labelRepository.update(id, dto, userId);
