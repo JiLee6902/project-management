@@ -79,6 +79,15 @@ jobs:
     if: ${{ github.event.inputs.app == 'all' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Debug - Check network connectivity
+        run: |
+          echo "Testing connectivity to ${{ secrets.PRODUCTION_HOST }}..."
+          nc -zv ${{ secrets.PRODUCTION_HOST }} 22 -w 10 || echo "Port 22 not reachable"
+          echo "---"
+          echo "Checking SSH key format (first/last lines only)..."
+          echo "${{ secrets.PRODUCTION_SSH_KEY }}" | head -1
+          echo "${{ secrets.PRODUCTION_SSH_KEY }}" | tail -1
+
       - name: Test SSH Connection
         uses: appleboy/ssh-action@v1.2.0
         with:
