@@ -4,11 +4,14 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger('HttpException');
+
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
@@ -21,13 +24,19 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     const errorResponse = this.getErrorResponse(exception, status);
 
-    console.error('Exception caught:', {
-      path: request.url,
-      method: request.method,
-      status,
-      error: errorResponse,
-      stack: exception instanceof Error ? exception.stack : undefined,
-    });
+    // Only log server errors (5xx) with full details
+    if (status >= 500) {
+      this.logger.error(
+        `${request.method} ${request.url} - ${status} - ${errorResponse.message}`,
+        exception instanceof Error ? exception.stack : undefined,
+      );
+    } else if (status >= 400 && status !== 404) {
+      // Log client errors (4xx) except 404 - brief log
+      this.logger.warn(
+        `${request.method} ${request.url} - ${status} - ${errorResponse.message}`,
+      );
+    }
+    // Skip logging 404 errors to reduce noise
 
     response.status(status).json({
       statusCode: status,
