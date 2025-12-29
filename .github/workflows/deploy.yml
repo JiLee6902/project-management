@@ -22,6 +22,20 @@ jobs:
     if: ${{ github.event.inputs.app != 'all' && github.event.inputs.app != 'infrastructure' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Copy docker-compose.prod.yml to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          port: 22
+          source: "server-nestjs/docker-compose.prod.yml"
+          target: "~/app"
+          strip_components: 1
+
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -37,12 +51,7 @@ jobs:
           script: |
             set -e
 
-            # Create directory if not exists
-            mkdir -p ~/app
             cd ~/app
-
-            # Download latest docker-compose.prod.yml
-            curl -sO https://raw.githubusercontent.com/JiLee6902/project-management/main/server-nestjs/docker-compose.prod.yml
 
             # Check .env.production exists
             if [ ! -f .env.production ]; then
@@ -79,28 +88,19 @@ jobs:
     if: ${{ github.event.inputs.app == 'all' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Debug - Check network connectivity
-        run: |
-          echo "Testing connectivity to ${{ secrets.PRODUCTION_HOST }}..."
-          nc -zv ${{ secrets.PRODUCTION_HOST }} 22 -w 10 || echo "Port 22 not reachable"
-          echo "---"
-          echo "Checking SSH key format (first/last lines only)..."
-          echo "${{ secrets.PRODUCTION_SSH_KEY }}" | head -1
-          echo "${{ secrets.PRODUCTION_SSH_KEY }}" | tail -1
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Test SSH Connection
-        uses: appleboy/ssh-action@v1.2.0
+      - name: Copy docker-compose.prod.yml to server
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.PRODUCTION_HOST }}
           username: ${{ secrets.PRODUCTION_USER }}
           key: ${{ secrets.PRODUCTION_SSH_KEY }}
           port: 22
-          timeout: 120s
-          debug: true
-          script: |
-            echo "SSH connection successful!"
-            whoami
-            hostname
+          source: "server-nestjs/docker-compose.prod.yml"
+          target: "~/app"
+          strip_components: 1
 
       - name: Deploy All Services to EC2
         uses: appleboy/ssh-action@v1.2.0
@@ -116,12 +116,7 @@ jobs:
           script: |
             set -e
 
-            # Create directory if not exists
-            mkdir -p ~/app
             cd ~/app
-
-            # Download latest docker-compose.prod.yml
-            curl -sO https://raw.githubusercontent.com/JiLee6902/project-management/main/server-nestjs/docker-compose.prod.yml
 
             # Check .env.production exists
             if [ ! -f .env.production ]; then
@@ -155,6 +150,20 @@ jobs:
     if: ${{ github.event.inputs.app == 'infrastructure' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Copy docker-compose.prod.yml to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.PRODUCTION_HOST }}
+          username: ${{ secrets.PRODUCTION_USER }}
+          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          port: 22
+          source: "server-nestjs/docker-compose.prod.yml"
+          target: "~/app"
+          strip_components: 1
+
       - name: Deploy Infrastructure to EC2
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -169,12 +178,7 @@ jobs:
           script: |
             set -e
 
-            # Create directory if not exists
-            mkdir -p ~/app
             cd ~/app
-
-            # Download latest docker-compose.prod.yml
-            curl -sO https://raw.githubusercontent.com/JiLee6902/project-management/main/server-nestjs/docker-compose.prod.yml
 
             # Check .env.production exists
             if [ ! -f .env.production ]; then
