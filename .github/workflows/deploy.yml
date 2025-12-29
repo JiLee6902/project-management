@@ -124,7 +124,7 @@ jobs:
             cd ~/app
 
             echo "Starting infrastructure services..."
-            docker compose --env-file .env.production -f docker-compose.prod.yml up -d postgres redis zookeeper kafka
+            docker compose --env-file .env.production -f docker-compose.prod.yml up -d postgres redis
 
             echo "Waiting for services to be healthy..."
             sleep 30
@@ -135,4 +135,4 @@ jobs:
       - name: Summary
         run: |
           echo "### Infrastructure Deployed! :rocket:" >> $GITHUB_STEP_SUMMARY
-          echo "Services: PostgreSQL, Redis, Zookeeper, Kafka" >> $GITHUB_STEP_SUMMARY
+          echo "Services: PostgreSQL, Redis" >> $GITHUB_STEP_SUMMARY
