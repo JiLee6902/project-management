@@ -50,14 +50,7 @@ jobs:
           script_stop: true
           script: |
             set -e
-
             cd ~/app
-
-            # Check .env.production exists
-            if [ ! -f .env.production ]; then
-              echo "ERROR: .env.production not found! Please create it first."
-              exit 1
-            fi
 
             echo "Docker Login..."
             echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
@@ -65,7 +58,7 @@ jobs:
             export VERSION="${{ github.sha }}"
             export REGISTRY="${{ env.REGISTRY }}"
 
-            echo "Pulling pm-${{ github.event.inputs.app }}..."
+            echo "Pulling ${{ github.event.inputs.app }}..."
             docker compose --env-file .env.production -f docker-compose.prod.yml pull ${{ github.event.inputs.app }}
 
             echo "Restarting ${{ github.event.inputs.app }}..."
@@ -115,14 +108,7 @@ jobs:
           script_stop: true
           script: |
             set -e
-
             cd ~/app
-
-            # Check .env.production exists
-            if [ ! -f .env.production ]; then
-              echo "ERROR: .env.production not found! Please create it first."
-              exit 1
-            fi
 
             echo "Docker Login..."
             echo "${{ secrets.DOCKER_PASSWORD }}" | docker login --username "${{ secrets.DOCKER_USERNAME }}" --password-stdin
@@ -177,14 +163,7 @@ jobs:
           script_stop: true
           script: |
             set -e
-
             cd ~/app
-
-            # Check .env.production exists
-            if [ ! -f .env.production ]; then
-              echo "ERROR: .env.production not found! Please create it first."
-              exit 1
-            fi
 
             echo "Starting infrastructure services..."
             docker compose --env-file .env.production -f docker-compose.prod.yml up -d postgres redis zookeeper kafka
