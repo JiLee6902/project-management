@@ -29,7 +29,8 @@ jobs:
           username: ${{ secrets.PRODUCTION_USER }}
           key: ${{ secrets.PRODUCTION_SSH_KEY }}
           port: 22
-          timeout: 60s
+          timeout: 120s
+          command_timeout: 30m
           envs: REGISTRY,GITHUB_SHA
           debug: true
           script_stop: true
@@ -85,7 +86,8 @@ jobs:
           username: ${{ secrets.PRODUCTION_USER }}
           key: ${{ secrets.PRODUCTION_SSH_KEY }}
           port: 22
-          timeout: 60s
+          timeout: 120s
+          command_timeout: 30m
           debug: true
           script_stop: true
           script: |
@@ -137,7 +139,8 @@ jobs:
           username: ${{ secrets.PRODUCTION_USER }}
           key: ${{ secrets.PRODUCTION_SSH_KEY }}
           port: 22
-          timeout: 60s
+          timeout: 120s
+          command_timeout: 30m
           debug: true
           script_stop: true
           script: |
