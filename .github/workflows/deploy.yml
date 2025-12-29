@@ -22,20 +22,6 @@ jobs:
     if: ${{ github.event.inputs.app != 'all' && github.event.inputs.app != 'infrastructure' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Copy docker-compose.prod.yml to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.PRODUCTION_HOST }}
-          username: ${{ secrets.PRODUCTION_USER }}
-          key: ${{ secrets.PRODUCTION_SSH_KEY }}
-          port: 22
-          source: "server-nestjs/docker-compose.prod.yml"
-          target: "~/app"
-          strip_components: 1
-
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -81,20 +67,6 @@ jobs:
     if: ${{ github.event.inputs.app == 'all' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Copy docker-compose.prod.yml to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.PRODUCTION_HOST }}
-          username: ${{ secrets.PRODUCTION_USER }}
-          key: ${{ secrets.PRODUCTION_SSH_KEY }}
-          port: 22
-          source: "server-nestjs/docker-compose.prod.yml"
-          target: "~/app"
-          strip_components: 1
-
       - name: Deploy All Services to EC2
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -136,20 +108,6 @@ jobs:
     if: ${{ github.event.inputs.app == 'infrastructure' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Copy docker-compose.prod.yml to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.PRODUCTION_HOST }}
-          username: ${{ secrets.PRODUCTION_USER }}
-          key: ${{ secrets.PRODUCTION_SSH_KEY }}
-          port: 22
-          source: "server-nestjs/docker-compose.prod.yml"
-          target: "~/app"
-          strip_components: 1
-
       - name: Deploy Infrastructure to EC2
         uses: appleboy/ssh-action@v1.2.0
         with:
