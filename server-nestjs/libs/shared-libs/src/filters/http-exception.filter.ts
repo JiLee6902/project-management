@@ -46,13 +46,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
     });
   }
 
-  private getErrorResponse(exception: unknown, status: number) {
+  private getErrorResponse(exception: unknown, status: number): { message: string; error: string } {
     if (exception instanceof HttpException) {
       const response = exception.getResponse();
 
-      if (typeof response === 'object' && 'message' in response) {
+      if (typeof response === 'object' && response !== null && 'message' in response) {
         return {
-          message: (response as any).message,
+          message: String((response as any).message),
           error: (response as any).error || 'Error',
         };
       }
@@ -64,7 +64,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
         };
       }
 
-      return response;
+      return {
+        message: 'An error occurred',
+        error: 'Error',
+      };
     }
 
     return {
