@@ -19,6 +19,12 @@ import {
   WebhookLog,
   Role,
   Permission,
+  Label,
+  Subtask,
+  TimeEntry,
+  Sprint,
+  Notification,
+  Activity,
 } from '@app/entity';
 
 import { TaskReminderModule } from './task-reminder/task-reminder.module';
@@ -58,6 +64,12 @@ import { RecurringTask } from '@app/entity/entities/recurring-task.entity';
           RecurringTask,
           Role,
           Permission,
+          Label,
+          Subtask,
+          TimeEntry,
+          Sprint,
+          Notification,
+          Activity,
         ],
         synchronize: configService.get<string>('TYPEORM_SYNCHRONIZE') === 'true',
         extra: {
