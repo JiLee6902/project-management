@@ -32,6 +32,12 @@ import {
   TaskCustomFieldValue,
   ProjectTemplate,
   AutomationRule,
+  Webhook,
+  WebhookLog,
+  RecurringTask,
+  AuditLog,
+  Permission,
+  Role,
 } from '@app/entity';
 
 import { AuthModule } from './domain/auth/auth.module';
@@ -55,6 +61,12 @@ import { SavedFilterModule } from './domain/saved-filter/saved-filter.module';
 import { CustomFieldModule } from './domain/custom-field/custom-field.module';
 import { ProjectTemplateModule } from './domain/project-template/project-template.module';
 import { AutomationModule } from './domain/automation/automation.module';
+import { ReportModule } from './domain/report/report.module';
+import { WebhookModule } from './domain/webhook/webhook.module';
+import { RecurringTaskModule } from './domain/recurring-task/recurring-task.module';
+import { AuditLogModule } from './domain/audit-log/audit-log.module';
+import { ImportModule } from './domain/import/import.module';
+import { PermissionModule } from './domain/permission/permission.module';
 
 @Module({
   imports: [
@@ -118,6 +130,12 @@ import { AutomationModule } from './domain/automation/automation.module';
           TaskCustomFieldValue,
           ProjectTemplate,
           AutomationRule,
+          Webhook,
+          WebhookLog,
+          RecurringTask,
+          AuditLog,
+          Permission,
+          Role,
         ],
         synchronize: configService.get<string>('TYPEORM_SYNCHRONIZE') === 'true' || configService.get<string>('NODE_ENV') === 'development',
         logging:
@@ -163,6 +181,12 @@ import { AutomationModule } from './domain/automation/automation.module';
     CustomFieldModule,
     ProjectTemplateModule,
     AutomationModule,
+    ReportModule,
+    WebhookModule,
+    RecurringTaskModule,
+    AuditLogModule,
+    ImportModule,
+    PermissionModule,
   ],
   providers: [
     {

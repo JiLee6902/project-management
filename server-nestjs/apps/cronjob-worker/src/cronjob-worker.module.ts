@@ -15,10 +15,15 @@ import {
   Task,
   Comment,
   FileMetadata,
+  Webhook,
+  WebhookLog,
 } from '@app/entity';
 
 import { TaskReminderModule } from './task-reminder/task-reminder.module';
 import { BloomFilterRebuildModule } from './bloom-filter-rebuild/bloom-filter-rebuild.module';
+import { WebhookRetryModule } from './webhook-retry/webhook-retry.module';
+import { RecurringTaskGeneratorModule } from './recurring-task-generator/recurring-task-generator.module';
+import { RecurringTask } from '@app/entity/entities/recurring-task.entity';
 
 @Module({
   imports: [
@@ -46,6 +51,9 @@ import { BloomFilterRebuildModule } from './bloom-filter-rebuild/bloom-filter-re
           Task,
           Comment,
           FileMetadata,
+          Webhook,
+          WebhookLog,
+          RecurringTask,
         ],
         synchronize: configService.get<string>('TYPEORM_SYNCHRONIZE') === 'true',
         extra: {
@@ -67,6 +75,8 @@ import { BloomFilterRebuildModule } from './bloom-filter-rebuild/bloom-filter-re
 
     TaskReminderModule,
     BloomFilterRebuildModule,
+    WebhookRetryModule,
+    RecurringTaskGeneratorModule,
   ],
 })
 export class CronjobWorkerModule {}

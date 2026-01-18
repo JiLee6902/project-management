@@ -1,0 +1,1068 @@
+================================================================================
+                    GIẢI THÍCH CHI TIẾT HỆ THỐNG POLICY (ABAC)
+================================================================================
+
+## 1. POLICY LÀ GÌ?
+
+Policy = Kiểm tra QUAN HỆ của user với resource cụ thể
+
+Permission: "User có QUYỀN update task không?" (chung chung)
+Policy:     "User có PHẢI người được assign task #123 này không?" (cụ thể)
+
+================================================================================
+## 2. CÁC FILE LIÊN QUAN
+================================================================================
+
+- libs/shared-libs/src/decorators/check-policy.decorator.ts  → Định nghĩa decorator
+- libs/shared-libs/src/guards/policy.guard.ts                → Guard kiểm tra policy
+- apps/app-api/src/domain/permission/service/policy.service.ts → Logic kiểm tra
+
+================================================================================
+## 3. CODE DECORATOR - check-policy.decorator.ts
+================================================================================
+
+```typescript
+import { SetMetadata } from '@nestjs/common';
+
+export const POLICY_KEY = 'policy';
+
+/**
+ * Các loại Policy có thể kiểm tra
+ */
+export enum PolicyType {
+  // Ownership - Kiểm tra quyền sở hữu
+  IS_OWNER = 'IS_OWNER',           // User có phải chủ sở hữu không?
+  IS_CREATOR = 'IS_CREATOR',       // User có phải người tạo không?
+  IS_ASSIGNEE = 'IS_ASSIGNEE',     // User có được assign không?
+
+  // Membership - Kiểm tra tư cách thành viên
+  IS_WORKSPACE_MEMBER = 'IS_WORKSPACE_MEMBER',  // User có trong workspace không?
+  IS_PROJECT_MEMBER = 'IS_PROJECT_MEMBER',      // User có trong project không?
+  IS_WORKSPACE_ADMIN = 'IS_WORKSPACE_ADMIN',    // User có phải admin workspace?
+  IS_PROJECT_MANAGER = 'IS_PROJECT_MANAGER',    // User có phải manager project?
+
+  // Combined - Kết hợp nhiều điều kiện
+  CAN_MANAGE_MEMBERS = 'CAN_MANAGE_MEMBERS',    // Có quyền quản lý thành viên?
+  CAN_MANAGE_SETTINGS = 'CAN_MANAGE_SETTINGS',  // Có quyền quản lý settings?
+}
+
+/**
+ * Interface định nghĩa 1 policy check
+ */
+export interface PolicyCheck {
+  type: PolicyType;           // Loại policy cần check
+  resourceIdParam?: string;   // Tên param chứa resource ID (VD: 'taskId')
+  workspaceIdParam?: string;  // Tên param chứa workspace ID
+  projectIdParam?: string;    // Tên param chứa project ID
+}
+
+/**
+ * Decorator chính - Gắn vào controller method
+ *
+ * @example
+ * @CheckPolicy({ type: PolicyType.IS_ASSIGNEE, resourceIdParam: 'taskId' })
+ * @Patch(':taskId')
+ * updateTask() { ... }
+ */
+export const CheckPolicy = (...policies: PolicyCheck[]) =>
+  SetMetadata(POLICY_KEY, policies);
+
+// ============ SHORTHAND DECORATORS (Viết tắt cho tiện) ============
+
+// Yêu cầu phải là thành viên workspace
+export const RequireWorkspaceMember = (workspaceIdParam = 'workspaceId') =>
+  CheckPolicy({ type: PolicyType.IS_WORKSPACE_MEMBER, workspaceIdParam });
+
+// Yêu cầu phải là thành viên project
+export const RequireProjectMember = (projectIdParam = 'projectId') =>
+  CheckPolicy({ type: PolicyType.IS_PROJECT_MEMBER, projectIdParam });
+
+// Yêu cầu phải là admin workspace
+export const RequireWorkspaceAdmin = (workspaceIdParam = 'workspaceId') =>
+  CheckPolicy({ type: PolicyType.IS_WORKSPACE_ADMIN, workspaceIdParam });
+
+// Yêu cầu phải là manager project
+export const RequireProjectManager = (projectIdParam = 'projectId') =>
+  CheckPolicy({ type: PolicyType.IS_PROJECT_MANAGER, projectIdParam });
+
+// Yêu cầu phải là owner resource
+export const RequireResourceOwner = (resourceIdParam: string) =>
+  CheckPolicy({ type: PolicyType.IS_OWNER, resourceIdParam });
+
+// Yêu cầu phải là assignee của task
+export const RequireTaskAssignee = (taskIdParam = 'taskId') =>
+  CheckPolicy({ type: PolicyType.IS_ASSIGNEE, resourceIdParam: taskIdParam });
+```
+
+GIẢI THÍCH:
+- SetMetadata: Hàm của NestJS, lưu metadata vào method/class
+- POLICY_KEY: Key để Guard lấy metadata sau này
+- PolicyCheck: Định nghĩa cần check gì và lấy ID từ param nào
+- Shorthand decorators: Viết tắt cho các trường hợp hay dùng
+
+================================================================================
+## 4. CODE GUARD - policy.guard.ts
+================================================================================
+
+```typescript
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Inject,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { POLICY_KEY, PolicyCheck, PolicyType } from '../decorators/check-policy.decorator';
+
+// Token để inject PolicyService
+export const POLICY_SERVICE = 'POLICY_SERVICE';
+
+/**
+ * Interface mà PolicyService phải implement
+ */
+export interface IPolicyService {
+  evaluatePolicy(
+    userId: string,
+    policyType: PolicyType,
+    context: PolicyContext,
+  ): Promise<boolean>;
+}
+
+/**
+ * Context chứa các ID cần thiết để check policy
+ */
+export interface PolicyContext {
+  resourceId?: string;    // ID của resource (task, project, etc.)
+  workspaceId?: string;
+  projectId?: string;
+  resourceType?: string;
+}
+
+@Injectable()
+export class PolicyGuard implements CanActivate {
+  constructor(
+    private reflector: Reflector,                    // Để đọc metadata
+    @Inject(POLICY_SERVICE)
+    private policyService: IPolicyService,           // Service xử lý logic
+  ) {}
+
+  /**
+   * Method chính - NestJS gọi method này để check có cho phép request không
+   */
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    // BƯỚC 1: Lấy metadata từ decorator @CheckPolicy()
+    const policies = this.reflector.getAllAndOverride<PolicyCheck[]>(POLICY_KEY, [
+      context.getHandler(),  // Lấy từ method
+      context.getClass(),    // Hoặc từ class
+    ]);
+
+    // Không có policy nào được định nghĩa → Cho phép
+    if (!policies || policies.length === 0) {
+      return true;
+    }
+
+    // BƯỚC 2: Lấy request và user
+    const request = context.switchToHttp().getRequest();
+    const user = request.user;
+
+    // Chưa đăng nhập → Từ chối
+    if (!user) {
+      throw new ForbiddenException('Access denied: User not authenticated');
+    }
+
+    // BƯỚC 3: Check từng policy - TẤT CẢ phải pass (AND logic)
+    for (const policy of policies) {
+      // Tạo context từ request params
+      const policyContext: PolicyContext = {
+        resourceId: this.extractParam(request, policy.resourceIdParam),
+        workspaceId: this.extractParam(request, policy.workspaceIdParam),
+        projectId: this.extractParam(request, policy.projectIdParam),
+      };
+
+      // Gọi service để evaluate
+      const passed = await this.policyService.evaluatePolicy(
+        user.id,
+        policy.type,
+        policyContext,
+      );
+
+      // Một policy fail → Từ chối ngay
+      if (!passed) {
+        throw new ForbiddenException(
+          `Access denied: Policy check failed (${policy.type})`,
+        );
+      }
+    }
+
+    // Tất cả policy đều pass → Cho phép
+    return true;
+  }
+
+  /**
+   * Helper: Lấy giá trị param từ request
+   * Tìm trong: params (URL) → body → query
+   */
+  private extractParam(request: any, paramName?: string): string | undefined {
+    if (!paramName) return undefined;
+
+    // Check URL params (VD: /tasks/:taskId)
+    if (request.params?.[paramName]) {
+      return request.params[paramName];
+    }
+
+    // Check body (VD: POST body)
+    if (request.body?.[paramName]) {
+      return request.body[paramName];
+    }
+
+    // Check query string (VD: ?taskId=xxx)
+    if (request.query?.[paramName]) {
+      return request.query[paramName];
+    }
+
+    return undefined;
+  }
+}
+```
+
+GIẢI THÍCH FLOW:
+```
+Request: PATCH /tasks/abc123
+              │
+              ▼
+┌─────────────────────────────────────────────────────────────┐
+│ 1. reflector.getAllAndOverride(POLICY_KEY, ...)             │
+│    → Lấy metadata từ @CheckPolicy decorator                 │
+│    → policies = [{ type: IS_ASSIGNEE, resourceIdParam: 'taskId' }]
+└─────────────────────────────────────────────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────────────────────────────────┐
+│ 2. extractParam(request, 'taskId')                          │
+│    → Lấy taskId từ URL params                               │
+│    → resourceId = "abc123"                                  │
+└─────────────────────────────────────────────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────────────────────────────────┐
+│ 3. policyService.evaluatePolicy(userId, IS_ASSIGNEE, {      │
+│      resourceId: "abc123"                                   │
+│    })                                                       │
+│    → Query DB: Task có assigneeId === userId không?         │
+└─────────────────────────────────────────────────────────────┘
+              │
+              ▼
+         TRUE / FALSE
+```
+
+================================================================================
+## 5. CODE SERVICE - policy.service.ts
+================================================================================
+
+```typescript
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import {
+  Task,
+  Project,
+  WorkspaceMember,
+  ProjectMember,
+  Comment,
+  Workspace,
+} from '@app/entity/entities';
+import { IPolicyService, PolicyContext } from '@app/shared-libs/guards/policy.guard';
+import { PolicyType } from '@app/shared-libs/decorators/check-policy.decorator';
+
+@Injectable()
+export class PolicyService implements IPolicyService {
+  constructor(
+    @InjectRepository(Task)
+    private readonly taskRepository: Repository<Task>,
+    @InjectRepository(Project)
+    private readonly projectRepository: Repository<Project>,
+    @InjectRepository(WorkspaceMember)
+    private readonly workspaceMemberRepository: Repository<WorkspaceMember>,
+    @InjectRepository(ProjectMember)
+    private readonly projectMemberRepository: Repository<ProjectMember>,
+    @InjectRepository(Comment)
+    private readonly commentRepository: Repository<Comment>,
+    @InjectRepository(Workspace)
+    private readonly workspaceRepository: Repository<Workspace>,
+  ) {}
+
+  /**
+   * Method chính - Evaluate một policy
+   * Switch case theo loại policy và gọi method tương ứng
+   */
+  async evaluatePolicy(
+    userId: string,
+    policyType: PolicyType,
+    context: PolicyContext,
+  ): Promise<boolean> {
+    switch (policyType) {
+      case PolicyType.IS_OWNER:
+        return this.isOwner(userId, context.resourceId);
+
+      case PolicyType.IS_CREATOR:
+        return this.isCreator(userId, context.resourceId);
+
+      case PolicyType.IS_ASSIGNEE:
+        return this.isAssignee(userId, context.resourceId);
+
+      case PolicyType.IS_WORKSPACE_MEMBER:
+        return this.isWorkspaceMember(userId, context.workspaceId);
+
+      case PolicyType.IS_PROJECT_MEMBER:
+        return this.isProjectMember(userId, context.projectId);
+
+      case PolicyType.IS_WORKSPACE_ADMIN:
+        return this.isWorkspaceAdmin(userId, context.workspaceId);
+
+      case PolicyType.IS_PROJECT_MANAGER:
+        return this.isProjectManager(userId, context.projectId);
+
+      case PolicyType.CAN_MANAGE_MEMBERS:
+        return this.canManageMembers(userId, context.workspaceId, context.projectId);
+
+      case PolicyType.CAN_MANAGE_SETTINGS:
+        return this.canManageSettings(userId, context.workspaceId, context.projectId);
+
+      default:
+        return false;
+    }
+  }
+
+  // ==================== CÁC METHOD CHECK CỤ THỂ ====================
+
+  /**
+   * IS_OWNER: Kiểm tra user có phải owner không
+   */
+  private async isOwner(userId: string, resourceId?: string): Promise<boolean> {
+    if (!resourceId) return false;
+
+    // Cách 1: User là workspace owner (có record với role = OWNER)
+    const workspaceMember = await this.workspaceMemberRepository.findOne({
+      where: { userId, workspaceId: resourceId, role: 'OWNER' as any },
+    });
+    if (workspaceMember) return true;
+
+    // Cách 2: User là người tạo workspace
+    const workspace = await this.workspaceRepository.findOne({
+      where: { id: resourceId, createdBy: userId },
+    });
+    if (workspace) return true;
+
+    return false;
+  }
+
+  /**
+   * IS_CREATOR: Kiểm tra user có phải người tạo resource không
+   */
+  private async isCreator(userId: string, resourceId?: string): Promise<boolean> {
+    if (!resourceId) return false;
+
+    // Check Task
+    const task = await this.taskRepository.findOne({
+      where: { id: resourceId, createdBy: userId },
+    });
+    if (task) return true;
+
+    // Check Project
+    const project = await this.projectRepository.findOne({
+      where: { id: resourceId, createdBy: userId },
+    });
+    if (project) return true;
+
+    // Check Comment
+    const comment = await this.commentRepository.findOne({
+      where: { id: resourceId, userId },
+    });
+    if (comment) return true;
+
+    return false;
+  }
+
+  /**
+   * IS_ASSIGNEE: Kiểm tra user có được assign task không
+   */
+  private async isAssignee(userId: string, taskId?: string): Promise<boolean> {
+    if (!taskId) return false;
+
+    const task = await this.taskRepository.findOne({
+      where: { id: taskId, assigneeId: userId },
+    });
+
+    return !!task;  // Có task → true, không có → false
+  }
+
+  /**
+   * IS_WORKSPACE_MEMBER: Kiểm tra user có trong workspace không
+   */
+  private async isWorkspaceMember(userId: string, workspaceId?: string): Promise<boolean> {
+    if (!workspaceId) return false;
+
+    const member = await this.workspaceMemberRepository.findOne({
+      where: { userId, workspaceId },
+    });
+
+    return !!member;
+  }
+
+  /**
+   * IS_PROJECT_MEMBER: Kiểm tra user có trong project không
+   */
+  private async isProjectMember(userId: string, projectId?: string): Promise<boolean> {
+    if (!projectId) return false;
+
+    // Cách 1: Direct project membership
+    const projectMember = await this.projectMemberRepository.findOne({
+      where: { userId, projectId },
+    });
+    if (projectMember) return true;
+
+    // Cách 2: Workspace admin/owner có quyền truy cập tất cả projects
+    const project = await this.projectRepository.findOne({
+      where: { id: projectId },
+    });
+    if (!project) return false;
+
+    const workspaceMember = await this.workspaceMemberRepository.findOne({
+      where: { userId, workspaceId: project.workspaceId },
+    });
+
+    if (workspaceMember && ['OWNER', 'ADMIN'].includes(workspaceMember.role)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * IS_WORKSPACE_ADMIN: Kiểm tra user có phải admin/owner workspace không
+   */
+  private async isWorkspaceAdmin(userId: string, workspaceId?: string): Promise<boolean> {
+    if (!workspaceId) return false;
+
+    const member = await this.workspaceMemberRepository.findOne({
+      where: { userId, workspaceId },
+    });
+
+    return member?.role === 'OWNER' || member?.role === 'ADMIN';
+  }
+
+  /**
+   * IS_PROJECT_MANAGER: Kiểm tra user có phải manager project không
+   */
+  private async isProjectManager(userId: string, projectId?: string): Promise<boolean> {
+    if (!projectId) return false;
+
+    const projectMember = await this.projectMemberRepository.findOne({
+      where: { userId, projectId },
+    });
+    if (projectMember?.role === 'MANAGER') return true;
+
+    // Workspace admin có quyền manager trên tất cả projects
+    const project = await this.projectRepository.findOne({
+      where: { id: projectId },
+    });
+    if (!project) return false;
+
+    return this.isWorkspaceAdmin(userId, project.workspaceId);
+  }
+
+  /**
+   * CAN_MANAGE_MEMBERS: Kiểm tra user có quyền quản lý thành viên không
+   */
+  private async canManageMembers(
+    userId: string,
+    workspaceId?: string,
+    projectId?: string,
+  ): Promise<boolean> {
+    if (projectId) {
+      const isManager = await this.isProjectManager(userId, projectId);
+      if (isManager) return true;
+    }
+
+    if (workspaceId) {
+      return this.isWorkspaceAdmin(userId, workspaceId);
+    }
+
+    return false;
+  }
+
+  /**
+   * CAN_MANAGE_SETTINGS: Kiểm tra user có quyền quản lý settings không
+   */
+  private async canManageSettings(
+    userId: string,
+    workspaceId?: string,
+    projectId?: string,
+  ): Promise<boolean> {
+    return this.canManageMembers(userId, workspaceId, projectId);
+  }
+}
+```
+
+================================================================================
+## 6. VÍ DỤ SỬ DỤNG TRONG CONTROLLER
+================================================================================
+
+```typescript
+@Controller('workspaces/:workspaceId/projects/:projectId/tasks')
+@UseGuards(AuthGuard('jwt'), PermissionsGuard, PolicyGuard)
+export class TaskController {
+
+  // VÍ DỤ 1: Chỉ dùng Policy
+  @Get()
+  @RequireProjectMember('projectId')
+  findAll() {
+    // Chỉ project members mới vào được
+  }
+
+  // VÍ DỤ 2: Kết hợp Permission + Policy
+  @Patch(':taskId')
+  @Permissions({ resource: ResourceType.TASK, action: ActionType.UPDATE })
+  @CheckPolicy({ type: PolicyType.IS_ASSIGNEE, resourceIdParam: 'taskId' })
+  update() {
+    // Phải có quyền UPDATE TASK + phải là assignee của task
+  }
+
+  // VÍ DỤ 3: Nhiều Policy (AND logic)
+  @Delete(':taskId')
+  @CheckPolicy(
+    { type: PolicyType.IS_WORKSPACE_ADMIN, workspaceIdParam: 'workspaceId' },
+    { type: PolicyType.IS_PROJECT_MANAGER, projectIdParam: 'projectId' }
+  )
+  delete() {
+    // Phải là workspace admin VÀ project manager
+  }
+}
+```
+
+================================================================================
+## 7. SO SÁNH PERMISSION VS POLICY
+================================================================================
+
+PERMISSION (RBAC):
+- Câu hỏi: "User có QUYỀN làm action này không?"
+- Dựa vào: Role của user → Role có permissions gì
+- Ví dụ: User có role MEMBER → MEMBER có "task:update" → Có quyền
+- Đặc điểm: Kiểm tra quyền CHUNG CHUNG, không quan tâm resource cụ thể
+
+POLICY (ABAC):
+- Câu hỏi: "User có QUAN HỆ gì với resource CỤ THỂ này?"
+- Dựa vào: Data trong database (relationships)
+- Ví dụ: Task #123 có assigneeId = user-456 → User 456 là assignee → PASS
+- Đặc điểm: Kiểm tra quan hệ CỤ THỂ, phải query database
+
+================================================================================
+## 8. FLOW TỔNG HỢP
+================================================================================
+
+Request: PATCH /workspaces/ws1/projects/proj1/tasks/task123
+
+Step 1: AuthGuard
+        → Verify JWT → Attach user vào request
+
+Step 2: PermissionsGuard (RBAC)
+        → Check user có permission "task:update" không
+        → Dựa vào role của user trong workspace/project
+
+Step 3: PolicyGuard (ABAC)
+        → Check user có phải assignee của task123 không
+        → Query: SELECT * FROM tasks WHERE id='task123' AND assignee_id='user-id'
+
+Step 4: Controller Handler
+        → Tất cả pass → Execute business logic
+
+================================================================================
+## 9. TÓM TẮT 1 CÂU
+================================================================================
+
+PERMISSION: Kiểm tra user có QUYỀN làm action đó không (dựa trên role)
+POLICY: Kiểm tra user có QUAN HỆ với resource cụ thể đó không (dựa trên data DB)
+
+================================================================================
+
+
+================================================================================
+## 10. GIẢI THÍCH CHI TIẾT: REFLECTOR VÀ METADATA
+================================================================================
+
+Đây là phần quan trọng nhất để hiểu cách Policy Guard hoạt động.
+
+### 10.1. DECORATOR LÀ GÌ?
+
+Decorator = Một function đặc biệt để "gắn thêm thông tin" vào class/method.
+
+```typescript
+// Đây là decorator
+@CheckPolicy({ type: PolicyType.IS_ASSIGNEE, resourceIdParam: 'taskId' })
+
+// Gắn vào method này
+@Patch(':taskId')
+updateTask() { ... }
+```
+
+Khi bạn viết `@CheckPolicy(...)`, TypeScript sẽ gọi function CheckPolicy
+và "gắn" thông tin đó vào method updateTask.
+
+### 10.2. SetMetadata LÀM GÌ?
+
+```typescript
+// Định nghĩa decorator
+export const CheckPolicy = (...policies: PolicyCheck[]) =>
+  SetMetadata(POLICY_KEY, policies);
+
+// POLICY_KEY = 'policy'
+```
+
+SetMetadata là function của NestJS, nó làm việc như sau:
+
+```
+SetMetadata('policy', [{ type: 'IS_ASSIGNEE', resourceIdParam: 'taskId' }])
+                │                              │
+                │                              │
+                ▼                              ▼
+            KEY                             VALUE
+
+NestJS sẽ lưu vào bộ nhớ nội bộ:
+┌─────────────────────────────────────────────────────────────────┐
+│  METADATA STORAGE (Bộ nhớ của NestJS)                           │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  {                                                              │
+│    target: updateTask,        // Method được gắn decorator      │
+│    key: 'policy',             // Key để tìm lại sau             │
+│    value: [{                  // Giá trị được lưu               │
+│      type: 'IS_ASSIGNEE',                                       │
+│      resourceIdParam: 'taskId'                                  │
+│    }]                                                           │
+│  }                                                              │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 10.3. CONTROLLER VÀ METHOD LÀ GÌ?
+
+```typescript
+@Controller('tasks')                    // ← Class decorator
+export class TaskController {           // ← Đây là CLASS (Controller)
+
+  @Get()
+  findAll() { ... }                     // ← Đây là METHOD
+
+  @Post()
+  create() { ... }                      // ← Đây là METHOD
+
+  @CheckPolicy({ type: PolicyType.IS_ASSIGNEE, resourceIdParam: 'taskId' })
+  @Patch(':taskId')
+  updateTask() { ... }                  // ← Đây là METHOD có @CheckPolicy
+
+  @Delete(':taskId')
+  delete() { ... }                      // ← Đây là METHOD
+}
+```
+
+Mỗi METHOD trong Controller xử lý một loại request:
+- findAll()   → GET /tasks
+- create()    → POST /tasks
+- updateTask()→ PATCH /tasks/:taskId    ← Method này có @CheckPolicy
+- delete()    → DELETE /tasks/:taskId
+
+### 10.4. KHI REQUEST ĐẾN, CHUYỆN GÌ XẢY RA?
+
+```
+Bước 1: Client gửi request
+─────────────────────────────────────────────────────────────────
+
+    Client gửi: PATCH /tasks/abc123
+                      │
+                      ▼
+
+Bước 2: NestJS Routing (Tìm method xử lý)
+─────────────────────────────────────────────────────────────────
+
+    NestJS nhận request và tìm xem method nào xử lý:
+
+    "PATCH /tasks/:taskId" → match với @Patch(':taskId') → updateTask()
+
+    NestJS lưu thông tin:
+    - Method sẽ xử lý: updateTask
+    - Class chứa method: TaskController
+    - Params: { taskId: 'abc123' }
+                      │
+                      ▼
+
+Bước 3: Chạy Guards (Trước khi vào Controller)
+─────────────────────────────────────────────────────────────────
+
+    @UseGuards(AuthGuard, PermissionsGuard, PolicyGuard)
+
+    NestJS gọi lần lượt: AuthGuard → PermissionsGuard → PolicyGuard
+                      │
+                      ▼
+
+Bước 4: PolicyGuard.canActivate(context) được gọi
+─────────────────────────────────────────────────────────────────
+
+    PolicyGuard nhận được "context" - chứa mọi thông tin về request:
+
+    context = ExecutionContext {
+
+      getHandler() → trả về: updateTask (function)
+                     Đây chính là METHOD sẽ xử lý request
+
+      getClass()   → trả về: TaskController (class)
+                     Đây chính là CLASS chứa method
+
+      switchToHttp().getRequest() → trả về HTTP request object:
+        {
+          method: 'PATCH',
+          url: '/tasks/abc123',
+          params: { taskId: 'abc123' },
+          body: { ... },
+          user: { id: 'user-456', ... }  // Từ AuthGuard
+        }
+    }
+```
+
+### 10.5. REFLECTOR ĐỌC METADATA NHƯ THẾ NÀO?
+
+```typescript
+// Trong PolicyGuard
+async canActivate(context: ExecutionContext) {
+
+  // context.getHandler() = updateTask (method đang xử lý request)
+  // context.getClass() = TaskController (class chứa method)
+
+  const policies = this.reflector.getAllAndOverride<PolicyCheck[]>(
+    POLICY_KEY,                    // = 'policy' (key để tìm)
+    [
+      context.getHandler(),        // = updateTask
+      context.getClass(),          // = TaskController
+    ]
+  );
+}
+```
+
+**reflector.getAllAndOverride()** hoạt động như sau:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  reflector.getAllAndOverride('policy', [updateTask, TaskController])
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  BƯỚC 1: Tìm trong METADATA STORAGE                             │
+│                                                                 │
+│  Tìm metadata với key = 'policy' được gắn trên updateTask       │
+│                                                                 │
+│  → Tìm thấy: [{ type: 'IS_ASSIGNEE', resourceIdParam: 'taskId' }]
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  BƯỚC 2: Nếu không tìm thấy ở method, tìm ở class               │
+│                                                                 │
+│  Tìm metadata với key = 'policy' được gắn trên TaskController   │
+│                                                                 │
+│  (Trong trường hợp này không cần vì đã tìm thấy ở method)       │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  BƯỚC 3: Trả về kết quả                                         │
+│                                                                 │
+│  policies = [{ type: 'IS_ASSIGNEE', resourceIdParam: 'taskId' }]│
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 10.6. TẠI SAO CẦN CẢ getHandler() VÀ getClass()?
+
+Vì decorator có thể gắn ở METHOD hoặc CLASS:
+
+```typescript
+// CÁCH 1: Gắn ở METHOD (chỉ áp dụng cho method đó)
+@Controller('tasks')
+export class TaskController {
+
+  @CheckPolicy({ type: PolicyType.IS_ASSIGNEE, resourceIdParam: 'taskId' })
+  @Patch(':taskId')
+  updateTask() { ... }   // ← Chỉ method này có policy check
+
+  @Get()
+  findAll() { ... }      // ← Method này KHÔNG có policy check
+}
+
+// CÁCH 2: Gắn ở CLASS (áp dụng cho TẤT CẢ methods)
+@Controller('tasks')
+@CheckPolicy({ type: PolicyType.IS_PROJECT_MEMBER, projectIdParam: 'projectId' })
+export class TaskController {
+
+  @Patch(':taskId')
+  updateTask() { ... }   // ← Có policy check (từ class)
+
+  @Get()
+  findAll() { ... }      // ← Cũng có policy check (từ class)
+
+  @Post()
+  create() { ... }       // ← Cũng có policy check (từ class)
+}
+
+// CÁCH 3: Gắn cả CLASS và METHOD (method override class)
+@Controller('tasks')
+@CheckPolicy({ type: PolicyType.IS_PROJECT_MEMBER, projectIdParam: 'projectId' })
+export class TaskController {
+
+  @CheckPolicy({ type: PolicyType.IS_ASSIGNEE, resourceIdParam: 'taskId' })
+  @Patch(':taskId')
+  updateTask() { ... }   // ← Dùng policy của METHOD (IS_ASSIGNEE)
+                         //   KHÔNG dùng policy của CLASS
+
+  @Get()
+  findAll() { ... }      // ← Dùng policy của CLASS (IS_PROJECT_MEMBER)
+}
+```
+
+**getAllAndOverride** = "Lấy tất cả và ghi đè"
+- Ưu tiên lấy từ METHOD trước
+- Nếu METHOD không có, lấy từ CLASS
+- Nếu METHOD có, BỎ QUA CLASS (override)
+
+### 10.7. FLOW ĐẦY ĐỦ TỪNG BƯỚC
+
+```
+================================================================================
+                         FLOW ĐẦY ĐỦ CỦA POLICY CHECK
+================================================================================
+
+BƯỚC 0: Viết code Controller
+─────────────────────────────────────────────────────────────────────────────────
+
+@Controller('tasks')
+export class TaskController {
+
+  @CheckPolicy({ type: PolicyType.IS_ASSIGNEE, resourceIdParam: 'taskId' })
+  @Patch(':taskId')
+  updateTask(@Param('taskId') taskId: string) {
+    // Business logic
+  }
+}
+
+Khi TypeScript compile code này:
+→ Gọi CheckPolicy({ type: PolicyType.IS_ASSIGNEE, resourceIdParam: 'taskId' })
+→ Gọi SetMetadata('policy', [{ type: 'IS_ASSIGNEE', resourceIdParam: 'taskId' }])
+→ NestJS lưu metadata vào storage, gắn với method updateTask
+
+================================================================================
+
+BƯỚC 1: Client gửi request
+─────────────────────────────────────────────────────────────────────────────────
+
+Client: PATCH /tasks/abc123
+        Headers: { Authorization: 'Bearer eyJhbG...' }
+        Body: { title: 'New title' }
+
+================================================================================
+
+BƯỚC 2: NestJS nhận request và routing
+─────────────────────────────────────────────────────────────────────────────────
+
+NestJS routing table:
+  GET    /tasks        → TaskController.findAll
+  POST   /tasks        → TaskController.create
+  PATCH  /tasks/:taskId→ TaskController.updateTask  ← MATCH!
+  DELETE /tasks/:taskId→ TaskController.delete
+
+Request "PATCH /tasks/abc123" match với "PATCH /tasks/:taskId"
+→ Method xử lý: updateTask
+→ Params extracted: { taskId: 'abc123' }
+
+================================================================================
+
+BƯỚC 3: NestJS tạo ExecutionContext
+─────────────────────────────────────────────────────────────────────────────────
+
+NestJS tạo object context chứa mọi thông tin:
+
+context = {
+  getHandler(): Function {
+    return updateTask;  // Reference đến method
+  },
+
+  getClass(): Function {
+    return TaskController;  // Reference đến class
+  },
+
+  switchToHttp(): {
+    getRequest(): {
+      return {
+        method: 'PATCH',
+        url: '/tasks/abc123',
+        params: { taskId: 'abc123' },
+        body: { title: 'New title' },
+        headers: { authorization: 'Bearer eyJhbG...' },
+        user: null  // Chưa có, AuthGuard sẽ set
+      }
+    }
+  }
+}
+
+================================================================================
+
+BƯỚC 4: Chạy AuthGuard
+─────────────────────────────────────────────────────────────────────────────────
+
+AuthGuard:
+  1. Lấy token từ header: 'Bearer eyJhbG...'
+  2. Verify JWT token
+  3. Decode ra user info: { id: 'user-456', email: 'user@example.com' }
+  4. Gắn vào request: request.user = { id: 'user-456', ... }
+
+================================================================================
+
+BƯỚC 5: Chạy PolicyGuard.canActivate(context)
+─────────────────────────────────────────────────────────────────────────────────
+
+PolicyGuard nhận context và bắt đầu xử lý:
+
+// BƯỚC 5.1: Lấy metadata
+const policies = this.reflector.getAllAndOverride<PolicyCheck[]>(
+  'policy',                      // Key
+  [
+    context.getHandler(),        // = updateTask (function reference)
+    context.getClass(),          // = TaskController (class reference)
+  ]
+);
+
+// Reflector tìm trong metadata storage:
+// - Tìm key 'policy' gắn trên updateTask → TÌM THẤY!
+// - Trả về: [{ type: 'IS_ASSIGNEE', resourceIdParam: 'taskId' }]
+
+policies = [{ type: 'IS_ASSIGNEE', resourceIdParam: 'taskId' }]
+
+// BƯỚC 5.2: Lấy request và user
+const request = context.switchToHttp().getRequest();
+// request = {
+//   params: { taskId: 'abc123' },
+//   user: { id: 'user-456', ... }
+// }
+
+const user = request.user;
+// user = { id: 'user-456', ... }
+
+// BƯỚC 5.3: Loop qua từng policy
+for (const policy of policies) {
+  // policy = { type: 'IS_ASSIGNEE', resourceIdParam: 'taskId' }
+
+  // Lấy taskId từ request params
+  const policyContext = {
+    resourceId: this.extractParam(request, 'taskId'),
+    // extractParam tìm trong request.params['taskId']
+    // → Tìm thấy: 'abc123'
+  };
+  // policyContext = { resourceId: 'abc123' }
+
+  // Gọi service để check
+  const passed = await this.policyService.evaluatePolicy(
+    'user-456',        // userId
+    'IS_ASSIGNEE',     // policyType
+    { resourceId: 'abc123' }  // context
+  );
+
+  // PolicyService sẽ query database:
+  // SELECT * FROM tasks WHERE id = 'abc123' AND assignee_id = 'user-456'
+
+  // Nếu tìm thấy → passed = true
+  // Nếu không    → passed = false → throw ForbiddenException
+}
+
+// Tất cả pass → return true
+
+================================================================================
+
+BƯỚC 6: Vào Controller method
+─────────────────────────────────────────────────────────────────────────────────
+
+Tất cả guards pass → NestJS gọi updateTask:
+
+updateTask('abc123') {
+  // Business logic ở đây
+  // User đã được verify là assignee của task abc123
+}
+
+================================================================================
+```
+
+### 10.8. HÌNH DUNG BẰNG HÌNH ẢNH
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              METADATA STORAGE                                │
+│                         (Bộ nhớ nội bộ của NestJS)                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Method: updateTask                                                   │   │
+│  │ Key: 'policy'                                                        │   │
+│  │ Value: [{ type: 'IS_ASSIGNEE', resourceIdParam: 'taskId' }]         │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Method: updateTask                                                   │   │
+│  │ Key: 'roles'                                                         │   │
+│  │ Value: ['admin', 'user']                                            │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │ Method: create                                                       │   │
+│  │ Key: 'permissions'                                                   │   │
+│  │ Value: [{ resource: 'TASK', action: 'CREATE' }]                     │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      │
+              ┌───────────────────────┴───────────────────────┐
+              │                                               │
+              ▼                                               ▼
+┌──────────────────────────────────┐        ┌──────────────────────────────────┐
+│ @CheckPolicy(...)                │        │ reflector.getAllAndOverride(     │
+│                                  │        │   'policy',                      │
+│ = SetMetadata('policy', [...])   │        │   [updateTask, TaskController]   │
+│                                  │        │ )                                │
+│ GHI vào storage                  │        │ ĐỌC từ storage                   │
+└──────────────────────────────────┘        └──────────────────────────────────┘
+        (Khi compile)                              (Khi request đến)
+```
+
+### 10.9. TÓM TẮT
+
+```
+1. @CheckPolicy(...)
+   → Gọi SetMetadata()
+   → Lưu metadata vào NestJS storage, gắn với method
+
+2. Request đến
+   → NestJS tìm method xử lý
+   → Tạo ExecutionContext
+
+3. PolicyGuard nhận context
+   → context.getHandler() = method đang xử lý (VD: updateTask)
+   → context.getClass() = class chứa method (VD: TaskController)
+
+4. Reflector đọc metadata
+   → Tìm trong storage với key 'policy'
+   → Tìm ở method trước, class sau
+   → Trả về giá trị đã lưu
+
+5. PolicyGuard xử lý
+   → Lấy params từ request
+   → Gọi PolicyService.evaluatePolicy()
+   → Query database để verify
+   → Pass hoặc throw ForbiddenException
+```
