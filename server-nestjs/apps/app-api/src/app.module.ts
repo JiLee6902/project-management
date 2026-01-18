@@ -4,7 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 
-import { RedisModule, EmailModule, WebSocketModule, BullQueueModule } from '@app/external-infra';
+import { RedisModule, KafkaModule, EmailModule, WebSocketModule, BullQueueModule } from '@app/external-infra';
 import { ThrottlerBehindProxyGuard } from '@app/shared-libs';
 import { LoggerModule } from '@app/logger';
 import {
@@ -155,6 +155,7 @@ import { PermissionModule } from './domain/permission/permission.module';
 
     LoggerModule,
     RedisModule,
+    KafkaModule,
     EmailModule,
     WebSocketModule,
     BullQueueModule,

@@ -3,4 +3,3 @@ node_modules
 dist
 server/
 server-nestjs/.env.production
-note.txt
