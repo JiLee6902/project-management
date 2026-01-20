@@ -42,7 +42,7 @@ services:
       redis-server
       --requirepass "${REDIS_PASSWORD}"
       --maxmemory 512mb
-      --maxmemory-policy allkeys-lru
+      --maxmemory-policy noeviction
       --save 900 1
       --save 300 10
       --appendonly yes

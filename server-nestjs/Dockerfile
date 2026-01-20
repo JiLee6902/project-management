@@ -44,6 +44,10 @@ ARG APP_PORT=3000
 # Copy built application
 COPY --from=builder /app/dist ./dist
 
+# Copy entrypoint script
+COPY entrypoint.sh ./
+RUN chmod +x entrypoint.sh
+
 # Set environment variables (ARG -> ENV for runtime)
 ENV NODE_ENV=production
 ENV PORT=${APP_PORT}
@@ -62,5 +66,5 @@ EXPOSE ${APP_PORT}
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:${PORT}/api || exit 1
 
-# Start the application
-CMD ["sh", "-c", "node dist/apps/${APP_NAME}/main.js"]
+# Start the application (runs migrations first, then starts app)
+CMD ["./entrypoint.sh"]
