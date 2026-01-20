@@ -21,4 +21,7 @@ export class GuestSession extends BaseEntity {
 
   @Column({ name: 'expires_at' })
   expiresAt: Date;
+
+  @Column({ name: 'login_count', default: 1 })
+  loginCount: number;
 }

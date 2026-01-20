@@ -307,56 +307,39 @@ export class AuthService {
         .getOne();
 
       if (existingSession) {
-        const now = new Date();
-        const isExpired = existingSession.expiresAt < now;
-
-        if (!isExpired) {
-          // CASE 1: Active session exists → Return existing user
-          const [accessToken, refreshToken] = await Promise.all([
-            this.tokenService.generateAccessToken(existingSession.user),
-            this.tokenService.generateRefreshToken(existingSession.user, queryRunner),
-          ]);
-
-          await queryRunner.commitTransaction();
-
-          return {
-            accessToken,
-            refreshToken,
-            user: {
-              id: existingSession.user.id,
-              email: existingSession.user.email,
-              name: existingSession.user.name,
-            },
-            isGuest: true,
-            remainingSessions: 0, // Already has session
-          } as LoginResponseDto & { isGuest: boolean; remainingSessions: number };
-        } else {
-          // CASE 2: Expired session → Update expiry and return existing user
-          const newExpiresAt = new Date();
-          newExpiresAt.setDate(newExpiresAt.getDate() + GUEST_SESSION_EXPIRY_DAYS);
-
-          existingSession.expiresAt = newExpiresAt;
-          await guestSessionRepo.save(existingSession);
-
-          const [accessToken, refreshToken] = await Promise.all([
-            this.tokenService.generateAccessToken(existingSession.user),
-            this.tokenService.generateRefreshToken(existingSession.user, queryRunner),
-          ]);
-
-          await queryRunner.commitTransaction();
-
-          return {
-            accessToken,
-            refreshToken,
-            user: {
-              id: existingSession.user.id,
-              email: existingSession.user.email,
-              name: existingSession.user.name,
-            },
-            isGuest: true,
-            remainingSessions: 0,
-          } as LoginResponseDto & { isGuest: boolean; remainingSessions: number };
+        // Check login count limit
+        if (existingSession.loginCount >= MAX_GUEST_SESSIONS) {
+          throw new BadRequestException(
+            `Maximum ${MAX_GUEST_SESSIONS} guest logins reached. Please register for unlimited access.`,
+          );
         }
+
+        // Increment login count and update expiry
+        existingSession.loginCount += 1;
+        const newExpiresAt = new Date();
+        newExpiresAt.setDate(newExpiresAt.getDate() + GUEST_SESSION_EXPIRY_DAYS);
+        existingSession.expiresAt = newExpiresAt;
+        await guestSessionRepo.save(existingSession);
+
+        // Generate tokens for existing user
+        const [accessToken, refreshToken] = await Promise.all([
+          this.tokenService.generateAccessToken(existingSession.user),
+          this.tokenService.generateRefreshToken(existingSession.user, queryRunner),
+        ]);
+
+        await queryRunner.commitTransaction();
+
+        return {
+          accessToken,
+          refreshToken,
+          user: {
+            id: existingSession.user.id,
+            email: existingSession.user.email,
+            name: existingSession.user.name,
+          },
+          isGuest: true,
+          remainingSessions: MAX_GUEST_SESSIONS - existingSession.loginCount,
+        } as LoginResponseDto & { isGuest: boolean; remainingSessions: number };
       }
 
       // STEP 2: No existing session → Check IP limit (count unique sessions per IP per day)
@@ -397,6 +380,7 @@ export class AuthService {
         deviceFingerprint: deviceFingerprint || undefined,
         userId: user.id,
         expiresAt,
+        loginCount: 1,
       });
       await guestSessionRepo.save(guestSession);
 
