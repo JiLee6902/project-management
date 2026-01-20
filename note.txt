@@ -11,7 +11,7 @@ Guest login cho phép user trải nghiệm app mà không cần đăng ký tài 
 
 ================================================================================
 
-2. FLOW CHI TIẾT
+2. FLOW CHI TIẾT (OPTIMIZED)
 --------------------------------------------------------------------------------
 
     [User click "Continue as Guest"]
@@ -34,12 +34,52 @@ Guest login cho phép user trải nghiệm app mà không cần đăng ký tài 
                   │
                   ▼
     ┌─────────────────────────────────────────────────────────────┐
-    │  BACKEND - Service (auth.service.ts)                        │
+    │  STEP 1: CHECK EXISTING SESSION (IP + Fingerprint)          │
+    │  ─────────────────────────────────────────────────          │
+    │  SELECT * FROM guest_sessions                               │
+    │  LEFT JOIN users ON users.id = guest_sessions.user_id       │
+    │  WHERE ip_address = :ip                                     │
+    │  AND device_fingerprint = :fingerprint                      │
+    │  ORDER BY created_at DESC                                   │
+    │  LIMIT 1                                                    │
+    └─────────────────────────────────────────────────────────────┘
+                  │
+          ┌───────┴───────┐
+          ▼               ▼
+    ┌─────────────┐ ┌─────────────────────────────────────────────┐
+    │  FOUND      │ │  NOT FOUND → Go to STEP 2                   │
+    └─────────────┘ └─────────────────────────────────────────────┘
+          │
+          ▼
+    ┌─────────────────────────────────────────────────────────────┐
+    │  CHECK: Session còn hạn không?                              │
     │                                                             │
-    │  STEP 1: CHECK IP LIMIT                                     │
-    │  ─────────────────────                                      │
+    │  CASE 1: CÒN HẠN (expires_at > NOW)                         │
+    │  ────────────────────────────────────                       │
+    │  → Return existing user + generate new tokens               │
+    │  → KHÔNG tạo user mới, giữ nguyên data cũ                   │
+    │                                                             │
+    │  CASE 2: HẾT HẠN (expires_at < NOW)                         │
+    │  ────────────────────────────────────                       │
+    │  → UPDATE session: expires_at = NOW + 1 DAY                 │
+    │  → Return existing user + generate new tokens               │
+    │  → KHÔNG tạo user mới, giữ nguyên data cũ                   │
+    └─────────────────────────────────────────────────────────────┘
+                  │
+                  ▼
+              [RETURN]
+
+    ════════════════════════════════════════════════════════════════
+    NẾU KHÔNG TÌM THẤY SESSION (User mới hoàn toàn)
+    ════════════════════════════════════════════════════════════════
+                  │
+                  ▼
+    ┌─────────────────────────────────────────────────────────────┐
+    │  STEP 2: CHECK DAILY LIMIT (IP)                             │
+    │  ───────────────────────────────                            │
     │  SELECT COUNT(*) FROM guest_sessions                        │
-    │  WHERE ip_address = :ip AND expires_at > NOW()              │
+    │  WHERE ip_address = :ip                                     │
+    │  AND created_at >= TODAY_START (00:00:00)                   │
     │                                                             │
     │  if (count >= 3) {                                          │
     │    throw Error("Maximum 3 guest sessions per day")          │
@@ -48,8 +88,8 @@ Guest login cho phép user trải nghiệm app mà không cần đăng ký tài 
                   │
                   ▼
     ┌─────────────────────────────────────────────────────────────┐
-    │  STEP 2: CREATE GUEST USER                                  │
-    │  ─────────────────────────                                  │
+    │  STEP 3: CREATE NEW GUEST USER                              │
+    │  ──────────────────────────────                             │
     │  INSERT INTO users (email, name, provider, password)        │
     │  VALUES (                                                   │
     │    'guest_a1b2c3d4@guest.local',  -- Random ID              │
@@ -61,7 +101,7 @@ Guest login cho phép user trải nghiệm app mà không cần đăng ký tài 
                   │
                   ▼
     ┌─────────────────────────────────────────────────────────────┐
-    │  STEP 3: SAVE GUEST SESSION (tracking)                      │
+    │  STEP 4: SAVE GUEST SESSION (tracking)                      │
     │  ─────────────────────────────────────                      │
     │  INSERT INTO guest_sessions                                 │
     │    (ip_address, device_fingerprint, user_id, expires_at)    │
@@ -71,29 +111,29 @@ Guest login cho phép user trải nghiệm app mà không cần đăng ký tài 
                   │
                   ▼
     ┌─────────────────────────────────────────────────────────────┐
-    │  STEP 4: CREATE SEED DATA                                   │
+    │  STEP 5: CREATE SEED DATA                                   │
     │  ─────────────────────────                                  │
     │                                                             │
-    │  4.1 Create Workspace:                                      │
+    │  5.1 Create Workspace:                                      │
     │      - name: "Demo Workspace"                               │
     │      - slug: "demo-workspace-{userId}"                      │
     │      - owner: guest user                                    │
     │                                                             │
-    │  4.2 Create WorkspaceMember:                                │
+    │  5.2 Create WorkspaceMember:                                │
     │      - userId: guest user                                   │
     │      - role: OWNER                                          │
     │                                                             │
-    │  4.3 Create Project:                                        │
+    │  5.3 Create Project:                                        │
     │      - name: "Sample Project"                               │
     │      - status: ACTIVE                                       │
     │      - priority: MEDIUM                                     │
     │      - progress: 30%                                        │
     │                                                             │
-    │  4.4 Create ProjectMember:                                  │
+    │  5.4 Create ProjectMember:                                  │
     │      - userId: guest user                                   │
     │      - role: MANAGER                                        │
     │                                                             │
-    │  4.5 Create 5 Sample Tasks:                                 │
+    │  5.5 Create 5 Sample Tasks:                                 │
     │      ┌────────────────────────────┬─────────────┬─────────┐ │
     │      │ Title                      │ Status      │ Type    │ │
     │      ├────────────────────────────┼─────────────┼─────────┤ │
@@ -107,7 +147,7 @@ Guest login cho phép user trải nghiệm app mà không cần đăng ký tài 
                   │
                   ▼
     ┌─────────────────────────────────────────────────────────────┐
-    │  STEP 5: GENERATE JWT TOKENS                                │
+    │  STEP 6: GENERATE JWT TOKENS                                │
     │  ────────────────────────────                               │
     │  accessToken = sign({                                       │
     │    sub: userId,                                             │
@@ -123,7 +163,7 @@ Guest login cho phép user trải nghiệm app mà không cần đăng ký tài 
                   │
                   ▼
     ┌─────────────────────────────────────────────────────────────┐
-    │  STEP 6: RETURN RESPONSE                                    │
+    │  STEP 7: RETURN RESPONSE                                    │
     │  ────────────────────────                                   │
     │  {                                                          │
     │    "accessToken": "eyJhbG...",                              │
@@ -146,6 +186,57 @@ Guest login cho phép user trải nghiệm app mà không cần đăng ký tài 
     │  - Redirect to Dashboard "/"                                │
     │  - Toast: "Welcome, Guest! You have X sessions remaining."  │
     └─────────────────────────────────────────────────────────────┘
+
+================================================================================
+
+3. SCENARIOS (VÍ DỤ CỤ THỂ)
+--------------------------------------------------------------------------------
+
+SCENARIO 1: User mới lần đầu vào
+────────────────────────────────
+  IP: 192.168.1.100, Fingerprint: "abc123"
+
+  Click Guest → Không tìm thấy session
+            → Check limit: 0/3 → OK
+            → Tạo Guest_AAA + Workspace + Project + Tasks
+            → Return tokens
+
+SCENARIO 2: User quay lại (cùng browser)
+────────────────────────────────────────
+  IP: 192.168.1.100, Fingerprint: "abc123"
+
+  Click Guest → Tìm thấy session Guest_AAA
+            → Check: còn hạn? → CÓ
+            → Return Guest_AAA tokens (KHÔNG tạo mới)
+            → Data cũ vẫn còn!
+
+SCENARIO 3: User quay lại sau 1 ngày
+────────────────────────────────────
+  IP: 192.168.1.100, Fingerprint: "abc123"
+
+  Click Guest → Tìm thấy session Guest_AAA
+            → Check: còn hạn? → KHÔNG (hết hạn)
+            → UPDATE expires_at = NOW + 1 DAY
+            → Return Guest_AAA tokens (KHÔNG tạo mới)
+            → Data cũ vẫn còn!
+
+SCENARIO 4: User dùng browser khác
+──────────────────────────────────
+  IP: 192.168.1.100, Fingerprint: "xyz789" (khác)
+
+  Click Guest → Không tìm thấy session với fingerprint này
+            → Check limit: 1/3 → OK
+            → Tạo Guest_BBB mới
+            → Return tokens
+
+SCENARIO 5: User đã dùng hết 3 lần trong ngày
+─────────────────────────────────────────────
+  IP: 192.168.1.100, Fingerprint: "new999"
+  Sessions today: Guest_AAA, Guest_BBB, Guest_CCC
+
+  Click Guest → Không tìm thấy session
+            → Check limit: 3/3 → REJECT
+            → Error: "Maximum 3 guest sessions per day"
 
 ================================================================================
 

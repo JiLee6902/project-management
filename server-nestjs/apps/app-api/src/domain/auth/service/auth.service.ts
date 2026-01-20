@@ -289,35 +289,97 @@ export class AuthService {
     const GUEST_SESSION_EXPIRY_DAYS = 1;
 
     try {
-      // Count existing guest sessions for this IP/device
       const guestSessionRepo = queryRunner.manager.getRepository(GuestSession);
+      const userRepo = queryRunner.manager.getRepository(User);
 
-      const sessionCount = await guestSessionRepo.count({
-        where: [
-          { ipAddress, expiresAt: new Date() > new Date() ? undefined : undefined },
-          ...(deviceFingerprint ? [{ deviceFingerprint }] : []),
-        ].filter(Boolean),
-      });
+      // STEP 1: Check if this IP + fingerprint has an existing session
+      const existingSession = await guestSessionRepo
+        .createQueryBuilder('session')
+        .leftJoinAndSelect('session.user', 'user')
+        .where('session.ip_address = :ipAddress', { ipAddress })
+        .andWhere(
+          deviceFingerprint
+            ? 'session.device_fingerprint = :fingerprint'
+            : 'session.device_fingerprint IS NULL',
+          { fingerprint: deviceFingerprint },
+        )
+        .orderBy('session.created_at', 'DESC')
+        .getOne();
 
-      // More accurate count query
-      const activeSessionCount = await guestSessionRepo
+      if (existingSession) {
+        const now = new Date();
+        const isExpired = existingSession.expiresAt < now;
+
+        if (!isExpired) {
+          // CASE 1: Active session exists → Return existing user
+          const [accessToken, refreshToken] = await Promise.all([
+            this.tokenService.generateAccessToken(existingSession.user),
+            this.tokenService.generateRefreshToken(existingSession.user, queryRunner),
+          ]);
+
+          await queryRunner.commitTransaction();
+
+          return {
+            accessToken,
+            refreshToken,
+            user: {
+              id: existingSession.user.id,
+              email: existingSession.user.email,
+              name: existingSession.user.name,
+            },
+            isGuest: true,
+            remainingSessions: 0, // Already has session
+          } as LoginResponseDto & { isGuest: boolean; remainingSessions: number };
+        } else {
+          // CASE 2: Expired session → Update expiry and return existing user
+          const newExpiresAt = new Date();
+          newExpiresAt.setDate(newExpiresAt.getDate() + GUEST_SESSION_EXPIRY_DAYS);
+
+          existingSession.expiresAt = newExpiresAt;
+          await guestSessionRepo.save(existingSession);
+
+          const [accessToken, refreshToken] = await Promise.all([
+            this.tokenService.generateAccessToken(existingSession.user),
+            this.tokenService.generateRefreshToken(existingSession.user, queryRunner),
+          ]);
+
+          await queryRunner.commitTransaction();
+
+          return {
+            accessToken,
+            refreshToken,
+            user: {
+              id: existingSession.user.id,
+              email: existingSession.user.email,
+              name: existingSession.user.name,
+            },
+            isGuest: true,
+            remainingSessions: 0,
+          } as LoginResponseDto & { isGuest: boolean; remainingSessions: number };
+        }
+      }
+
+      // STEP 2: No existing session → Check IP limit (count unique sessions per IP per day)
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      const dailySessionCount = await guestSessionRepo
         .createQueryBuilder('session')
         .where('session.ip_address = :ipAddress', { ipAddress })
-        .andWhere('session.expires_at > :now', { now: new Date() })
+        .andWhere('session.created_at >= :todayStart', { todayStart })
         .getCount();
 
-      if (activeSessionCount >= MAX_GUEST_SESSIONS) {
+      if (dailySessionCount >= MAX_GUEST_SESSIONS) {
         throw new BadRequestException(
-          `Maximum ${MAX_GUEST_SESSIONS} guest sessions allowed per device. Please register for unlimited access.`,
+          `Maximum ${MAX_GUEST_SESSIONS} guest sessions allowed per device per day. Please register for unlimited access.`,
         );
       }
 
-      // Create guest user with unique email
+      // STEP 3: Create new guest user
       const guestId = uuidv4().substring(0, 8);
       const guestEmail = `guest_${guestId}@guest.local`;
       const guestName = `Guest ${guestId.toUpperCase()}`;
 
-      const userRepo = queryRunner.manager.getRepository(User);
       const user = userRepo.create({
         email: guestEmail,
         name: guestName,
@@ -326,7 +388,7 @@ export class AuthService {
       });
       await userRepo.save(user);
 
-      // Create guest session record
+      // STEP 4: Create guest session record
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + GUEST_SESSION_EXPIRY_DAYS);
 
@@ -338,10 +400,10 @@ export class AuthService {
       });
       await guestSessionRepo.save(guestSession);
 
-      // Create seed data for guest
+      // STEP 5: Create seed data for guest
       await this.createGuestSeedData(user, queryRunner);
 
-      // Generate tokens
+      // STEP 6: Generate tokens
       const [accessToken, refreshToken] = await Promise.all([
         this.tokenService.generateAccessToken(user),
         this.tokenService.generateRefreshToken(user, queryRunner),
@@ -358,7 +420,7 @@ export class AuthService {
           name: user.name,
         },
         isGuest: true,
-        remainingSessions: MAX_GUEST_SESSIONS - activeSessionCount - 1,
+        remainingSessions: MAX_GUEST_SESSIONS - dailySessionCount - 1,
       } as LoginResponseDto & { isGuest: boolean; remainingSessions: number };
     } catch (error) {
       await queryRunner.rollbackTransaction();
