@@ -1,4 +1,24 @@
 services:
+  # Migration job - run separately before deploying apps
+  # Usage: docker-compose -f docker-compose.prod.yml run --rm migration
+  migration:
+    image: ${REGISTRY}/pm-migration:${VERSION}
+    container_name: pm-migration
+    env_file:
+      - .env.production
+    depends_on:
+      - postgres
+    environment:
+      NODE_ENV: production
+    networks:
+      - pm_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    restart: "no"
+
   postgres:
     image: postgres:15-alpine
     container_name: pm-postgres
@@ -149,6 +169,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
+      RUN_MIGRATIONS: "false"  # Migrations run separately in CI/CD
     volumes:
       - app_api_logs:/app/logs
     networks:

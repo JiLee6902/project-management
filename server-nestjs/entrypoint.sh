@@ -3,8 +3,10 @@ set -e
 
 echo "Starting ${APP_NAME}..."
 
-# Only run migrations for app-api to avoid race conditions
-if [ "$APP_NAME" = "app-api" ]; then
+# Hybrid mode: Run migrations only if RUN_MIGRATIONS=true
+# - CI/CD: Set RUN_MIGRATIONS=false (migrations run separately)
+# - Local/Dev: Set RUN_MIGRATIONS=true (migrations run in entrypoint)
+if [ "$RUN_MIGRATIONS" = "true" ] && [ "$APP_NAME" = "app-api" ]; then
     echo "Running database migrations..."
     node ./node_modules/typeorm/cli.js migration:run -d dist/libs/entity/data-source.js
     echo "Migrations completed."
