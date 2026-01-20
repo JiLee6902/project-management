@@ -322,7 +322,7 @@ export class AuthService {
         email: guestEmail,
         name: guestName,
         provider: AuthProvider.GUEST,
-        password: null,
+        password: undefined,
       });
       await userRepo.save(user);
 
@@ -332,7 +332,7 @@ export class AuthService {
 
       const guestSession = guestSessionRepo.create({
         ipAddress,
-        deviceFingerprint: deviceFingerprint || null,
+        deviceFingerprint: deviceFingerprint || undefined,
         userId: user.id,
         expiresAt,
       });

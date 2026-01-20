@@ -1,0 +1,264 @@
+================================================================================
+                         GUEST LOGIN WORKFLOW
+================================================================================
+
+1. TỔNG QUAN
+--------------------------------------------------------------------------------
+Guest login cho phép user trải nghiệm app mà không cần đăng ký tài khoản.
+- Giới hạn: 3 lần/IP/ngày
+- Mỗi lần login tạo 1 guest account mới với data mẫu
+- Guest có đầy đủ quyền như user thường
+
+================================================================================
+
+2. FLOW CHI TIẾT
+--------------------------------------------------------------------------------
+
+    [User click "Continue as Guest"]
+                  │
+                  ▼
+    ┌─────────────────────────────────────────────────────────────┐
+    │  FRONTEND (Login.jsx)                                       │
+    │  - Tạo device fingerprint từ: userAgent + screen + timezone │
+    │  - Gọi API: POST /api/auth/guest                            │
+    │    Body: { deviceFingerprint: "base64string" }              │
+    └─────────────────────────────────────────────────────────────┘
+                  │
+                  ▼
+    ┌─────────────────────────────────────────────────────────────┐
+    │  BACKEND - Controller (auth-public.controller.ts)           │
+    │  - Lấy IP từ request:                                       │
+    │    req.ip || x-forwarded-for || socket.remoteAddress        │
+    │  - Gọi authService.guestLogin(ipAddress, fingerprint)       │
+    └─────────────────────────────────────────────────────────────┘
+                  │
+                  ▼
+    ┌─────────────────────────────────────────────────────────────┐
+    │  BACKEND - Service (auth.service.ts)                        │
+    │                                                             │
+    │  STEP 1: CHECK IP LIMIT                                     │
+    │  ─────────────────────                                      │
+    │  SELECT COUNT(*) FROM guest_sessions                        │
+    │  WHERE ip_address = :ip AND expires_at > NOW()              │
+    │                                                             │
+    │  if (count >= 3) {                                          │
+    │    throw Error("Maximum 3 guest sessions per day")          │
+    │  }                                                          │
+    └─────────────────────────────────────────────────────────────┘
+                  │
+                  ▼
+    ┌─────────────────────────────────────────────────────────────┐
+    │  STEP 2: CREATE GUEST USER                                  │
+    │  ─────────────────────────                                  │
+    │  INSERT INTO users (email, name, provider, password)        │
+    │  VALUES (                                                   │
+    │    'guest_a1b2c3d4@guest.local',  -- Random ID              │
+    │    'Guest A1B2C3D4',                                        │
+    │    'GUEST',                                                 │
+    │    NULL                            -- No password           │
+    │  )                                                          │
+    └─────────────────────────────────────────────────────────────┘
+                  │
+                  ▼
+    ┌─────────────────────────────────────────────────────────────┐
+    │  STEP 3: SAVE GUEST SESSION (tracking)                      │
+    │  ─────────────────────────────────────                      │
+    │  INSERT INTO guest_sessions                                 │
+    │    (ip_address, device_fingerprint, user_id, expires_at)    │
+    │  VALUES                                                     │
+    │    (:ip, :fingerprint, :userId, NOW() + 1 DAY)              │
+    └─────────────────────────────────────────────────────────────┘
+                  │
+                  ▼
+    ┌─────────────────────────────────────────────────────────────┐
+    │  STEP 4: CREATE SEED DATA                                   │
+    │  ─────────────────────────                                  │
+    │                                                             │
+    │  4.1 Create Workspace:                                      │
+    │      - name: "Demo Workspace"                               │
+    │      - slug: "demo-workspace-{userId}"                      │
+    │      - owner: guest user                                    │
+    │                                                             │
+    │  4.2 Create WorkspaceMember:                                │
+    │      - userId: guest user                                   │
+    │      - role: OWNER                                          │
+    │                                                             │
+    │  4.3 Create Project:                                        │
+    │      - name: "Sample Project"                               │
+    │      - status: ACTIVE                                       │
+    │      - priority: MEDIUM                                     │
+    │      - progress: 30%                                        │
+    │                                                             │
+    │  4.4 Create ProjectMember:                                  │
+    │      - userId: guest user                                   │
+    │      - role: MANAGER                                        │
+    │                                                             │
+    │  4.5 Create 5 Sample Tasks:                                 │
+    │      ┌────────────────────────────┬─────────────┬─────────┐ │
+    │      │ Title                      │ Status      │ Type    │ │
+    │      ├────────────────────────────┼─────────────┼─────────┤ │
+    │      │ Welcome! Start here        │ TODO        │ TASK    │ │
+    │      │ Try creating a new task    │ TODO        │ FEATURE │ │
+    │      │ Explore the dashboard      │ IN_PROGRESS │ TASK    │ │
+    │      │ Completed example task     │ DONE        │ TASK    │ │
+    │      │ Sample bug to fix          │ TODO        │ BUG     │ │
+    │      └────────────────────────────┴─────────────┴─────────┘ │
+    └─────────────────────────────────────────────────────────────┘
+                  │
+                  ▼
+    ┌─────────────────────────────────────────────────────────────┐
+    │  STEP 5: GENERATE JWT TOKENS                                │
+    │  ────────────────────────────                               │
+    │  accessToken = sign({                                       │
+    │    sub: userId,                                             │
+    │    email: "guest_xxx@guest.local",                          │
+    │    jti: "unique-token-id"                                   │
+    │  }, JWT_SECRET)                                             │
+    │                                                             │
+    │  refreshToken = sign({                                      │
+    │    userId: userId,                                          │
+    │    jti: "unique-refresh-id"                                 │
+    │  }, JWT_REFRESH_SECRET)                                     │
+    └─────────────────────────────────────────────────────────────┘
+                  │
+                  ▼
+    ┌─────────────────────────────────────────────────────────────┐
+    │  STEP 6: RETURN RESPONSE                                    │
+    │  ────────────────────────                                   │
+    │  {                                                          │
+    │    "accessToken": "eyJhbG...",                              │
+    │    "refreshToken": "eyJhbG...",                             │
+    │    "user": {                                                │
+    │      "id": "uuid-xyz",                                      │
+    │      "email": "guest_a1b2c3d4@guest.local",                 │
+    │      "name": "Guest A1B2C3D4"                               │
+    │    },                                                       │
+    │    "isGuest": true,                                         │
+    │    "remainingSessions": 2                                   │
+    │  }                                                          │
+    └─────────────────────────────────────────────────────────────┘
+                  │
+                  ▼
+    ┌─────────────────────────────────────────────────────────────┐
+    │  FRONTEND (AuthContext.jsx)                                 │
+    │  - Lưu tokens vào localStorage                              │
+    │  - Lưu user info (với isGuest flag)                         │
+    │  - Redirect to Dashboard "/"                                │
+    │  - Toast: "Welcome, Guest! You have X sessions remaining."  │
+    └─────────────────────────────────────────────────────────────┘
+
+================================================================================
+
+3. DATABASE SCHEMA
+--------------------------------------------------------------------------------
+
+TABLE: guest_sessions
+┌─────────────────────┬──────────────┬─────────────────────────────┐
+│ Column              │ Type         │ Description                 │
+├─────────────────────┼──────────────┼─────────────────────────────┤
+│ id                  │ UUID (PK)    │ Primary key                 │
+│ ip_address          │ VARCHAR      │ Client IP address (indexed) │
+│ device_fingerprint  │ VARCHAR      │ Browser fingerprint         │
+│ user_id             │ UUID (FK)    │ Reference to users table    │
+│ expires_at          │ TIMESTAMP    │ Session expiry (1 day)      │
+│ created_at          │ TIMESTAMP    │ Auto                        │
+│ updated_at          │ TIMESTAMP    │ Auto                        │
+└─────────────────────┴──────────────┴─────────────────────────────┘
+
+TABLE: users (updated)
+┌─────────────────────┬──────────────┬─────────────────────────────┐
+│ Column              │ Type         │ Values                      │
+├─────────────────────┼──────────────┼─────────────────────────────┤
+│ provider            │ ENUM         │ LOCAL, GOOGLE, GITHUB,      │
+│                     │              │ GUEST  <-- NEW              │
+└─────────────────────┴──────────────┴─────────────────────────────┘
+
+================================================================================
+
+4. API ENDPOINT
+--------------------------------------------------------------------------------
+
+POST /api/auth/guest
+────────────────────
+
+Request:
+  Headers:
+    Content-Type: application/json
+
+  Body:
+    {
+      "deviceFingerprint": "string (optional)"
+    }
+
+Response (Success - 200):
+    {
+      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "user": {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "email": "guest_a1b2c3d4@guest.local",
+        "name": "Guest A1B2C3D4"
+      },
+      "isGuest": true,
+      "remainingSessions": 2
+    }
+
+Response (Error - 400):
+    {
+      "statusCode": 400,
+      "message": "Maximum 3 guest sessions allowed per device. Please register for unlimited access.",
+      "error": "Bad Request"
+    }
+
+Rate Limit: 3 requests per 60 seconds (Throttle)
+
+================================================================================
+
+5. FILES CHANGED
+--------------------------------------------------------------------------------
+
+BACKEND:
+  libs/entity/src/entities/
+    ├── guest-session.entity.ts      (NEW)  - Guest session tracking
+    ├── user.entity.ts               (MOD)  - Add GUEST to AuthProvider
+    └── index.ts                     (MOD)  - Export GuestSession
+
+  apps/app-api/src/domain/auth/
+    ├── dto/
+    │   ├── guest-login.dto.ts       (NEW)  - Request DTO
+    │   ├── login-response.dto.ts    (MOD)  - Add isGuest, remainingSessions
+    │   └── index.ts                 (MOD)  - Export GuestLoginDto
+    ├── controller/
+    │   └── auth-public.controller.ts (MOD) - Add POST /auth/guest
+    ├── service/
+    │   └── auth.service.ts          (MOD)  - Add guestLogin(), createGuestSeedData()
+    └── auth.module.ts               (MOD)  - Register GuestSession entity
+
+FRONTEND:
+  client/src/
+    ├── context/AuthContext.jsx      (MOD)  - Add guestLogin() method
+    └── pages/Login.jsx              (MOD)  - Add Guest button
+
+================================================================================
+
+6. SECURITY NOTES
+--------------------------------------------------------------------------------
+
+1. IP-based limiting:
+   - Dễ bypass bằng VPN/Proxy
+   - Có thể false positive với shared IP (office, public wifi)
+   - Kết hợp với device fingerprint để tăng độ chính xác
+
+2. Guest data isolation:
+   - Mỗi guest có workspace/project riêng
+   - Không access được data của user khác
+
+3. Session expiry:
+   - Guest session hết hạn sau 1 ngày
+   - Sau 1 ngày, cùng IP có thể tạo 3 guest mới
+
+4. JWT tokens:
+   - Guest dùng JWT token như user thường
+   - Không phân biệt guest/user trong các API khác
+
+================================================================================
