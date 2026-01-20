@@ -5,13 +5,16 @@
 1. TỔNG QUAN
 --------------------------------------------------------------------------------
 Guest login cho phép user trải nghiệm app mà không cần đăng ký tài khoản.
-- Giới hạn: 3 lần/IP/ngày
-- Mỗi lần login tạo 1 guest account mới với data mẫu
-- Guest có đầy đủ quyền như user thường
+
+GIỚI HẠN:
+  - Mỗi session (IP + Fingerprint): tối đa 3 lần login
+  - Mỗi IP: tối đa 3 session MỚI trong ngày (khác fingerprint)
+  - Mỗi lần login đầu tiên → tạo user + seed data
+  - Các lần sau → return user cũ (giữ data)
 
 ================================================================================
 
-2. FLOW CHI TIẾT (OPTIMIZED)
+2. FLOW CHI TIẾT
 --------------------------------------------------------------------------------
 
     [User click "Continue as Guest"]
@@ -34,8 +37,8 @@ Guest login cho phép user trải nghiệm app mà không cần đăng ký tài 
                   │
                   ▼
     ┌─────────────────────────────────────────────────────────────┐
-    │  STEP 1: CHECK EXISTING SESSION (IP + Fingerprint)          │
-    │  ─────────────────────────────────────────────────          │
+    │  STEP 1: TÌM SESSION THEO IP + FINGERPRINT                  │
+    │  ─────────────────────────────────────────                  │
     │  SELECT * FROM guest_sessions                               │
     │  LEFT JOIN users ON users.id = guest_sessions.user_id       │
     │  WHERE ip_address = :ip                                     │
@@ -46,150 +49,132 @@ Guest login cho phép user trải nghiệm app mà không cần đăng ký tài 
                   │
           ┌───────┴───────┐
           ▼               ▼
-    ┌─────────────┐ ┌─────────────────────────────────────────────┐
-    │  FOUND      │ │  NOT FOUND → Go to STEP 2                   │
-    └─────────────┘ └─────────────────────────────────────────────┘
+    ┌───────────┐   ┌─────────────────────────────────────────────┐
+    │  TÌM THẤY │   │  KHÔNG TÌM THẤY → Go to STEP 2              │
+    └───────────┘   └─────────────────────────────────────────────┘
           │
           ▼
     ┌─────────────────────────────────────────────────────────────┐
     │  CHECK: loginCount >= 3?                                    │
     │                                                             │
     │  CÓ (loginCount >= 3):                                      │
-    │  ────────────────────────────────────                       │
+    │  ─────────────────────                                      │
     │  → REJECT: "Maximum 3 guest logins reached"                 │
     │                                                             │
     │  KHÔNG (loginCount < 3):                                    │
-    │  ────────────────────────────────────                       │
-    │  → loginCount += 1                                          │
-    │  → UPDATE expires_at = NOW + 1 DAY                          │
+    │  ───────────────────────                                    │
+    │  → UPDATE: loginCount += 1                                  │
+    │  → UPDATE: expires_at = NOW + 1 DAY                         │
     │  → Return existing user + generate new tokens               │
     │  → remainingSessions = 3 - loginCount                       │
+    │  → [END - RETURN RESPONSE]                                  │
     └─────────────────────────────────────────────────────────────┘
-                  │
-                  ▼
-              [RETURN]
 
     ════════════════════════════════════════════════════════════════
-    NẾU KHÔNG TÌM THẤY SESSION (User mới hoàn toàn)
+    NẾU KHÔNG TÌM THẤY SESSION (IP hoặc Fingerprint mới)
     ════════════════════════════════════════════════════════════════
                   │
                   ▼
     ┌─────────────────────────────────────────────────────────────┐
-    │  STEP 2: CHECK DAILY LIMIT (IP)                             │
-    │  ───────────────────────────────                            │
+    │  STEP 2: CHECK DAILY LIMIT (số session MỚI trong ngày)      │
+    │  ─────────────────────────────────────────────────────      │
     │  SELECT COUNT(*) FROM guest_sessions                        │
     │  WHERE ip_address = :ip                                     │
-    │  AND created_at >= TODAY_START (00:00:00)                   │
+    │  AND created_at >= TODAY 00:00:00                           │
     │                                                             │
     │  if (count >= 3) {                                          │
-    │    throw Error("Maximum 3 guest sessions per day")          │
+    │    throw Error("Max 3 guest sessions per day")              │
     │  }                                                          │
+    │                                                             │
+    │  Giải thích: Giới hạn tạo 3 USER MỚI/ngày cho mỗi IP        │
+    │  (chống spam tạo nhiều account bằng cách đổi fingerprint)   │
     └─────────────────────────────────────────────────────────────┘
                   │
                   ▼
     ┌─────────────────────────────────────────────────────────────┐
-    │  STEP 3: CREATE NEW GUEST USER                              │
-    │  ──────────────────────────────                             │
+    │  STEP 3: TẠO GUEST USER MỚI                                 │
+    │  ───────────────────────────                                │
     │  INSERT INTO users (email, name, provider, password)        │
     │  VALUES (                                                   │
-    │    'guest_a1b2c3d4@guest.local',  -- Random ID              │
+    │    'guest_a1b2c3d4@guest.local',                            │
     │    'Guest A1B2C3D4',                                        │
     │    'GUEST',                                                 │
-    │    NULL                            -- No password           │
+    │    NULL                                                     │
     │  )                                                          │
     └─────────────────────────────────────────────────────────────┘
                   │
                   ▼
     ┌─────────────────────────────────────────────────────────────┐
-    │  STEP 4: SAVE GUEST SESSION (tracking)                      │
-    │  ─────────────────────────────────────                      │
+    │  STEP 4: TẠO GUEST SESSION                                  │
+    │  ──────────────────────────                                 │
     │  INSERT INTO guest_sessions                                 │
-    │    (ip_address, device_fingerprint, user_id, expires_at)    │
+    │    (ip_address, device_fingerprint, user_id,                │
+    │     expires_at, login_count)                                │
     │  VALUES                                                     │
-    │    (:ip, :fingerprint, :userId, NOW() + 1 DAY)              │
+    │    (:ip, :fingerprint, :userId, NOW + 1 DAY, 1)             │
     └─────────────────────────────────────────────────────────────┘
                   │
                   ▼
     ┌─────────────────────────────────────────────────────────────┐
-    │  STEP 5: CREATE SEED DATA                                   │
-    │  ─────────────────────────                                  │
+    │  STEP 5: TẠO SEED DATA                                      │
+    │  ─────────────────────                                      │
     │                                                             │
-    │  5.1 Create Workspace:                                      │
-    │      - name: "Demo Workspace"                               │
-    │      - slug: "demo-workspace-{userId}"                      │
-    │      - owner: guest user                                    │
-    │                                                             │
-    │  5.2 Create WorkspaceMember:                                │
-    │      - userId: guest user                                   │
-    │      - role: OWNER                                          │
-    │                                                             │
-    │  5.3 Create Project:                                        │
-    │      - name: "Sample Project"                               │
-    │      - status: ACTIVE                                       │
-    │      - priority: MEDIUM                                     │
-    │      - progress: 30%                                        │
-    │                                                             │
-    │  5.4 Create ProjectMember:                                  │
-    │      - userId: guest user                                   │
-    │      - role: MANAGER                                        │
-    │                                                             │
-    │  5.5 Create 5 Sample Tasks:                                 │
-    │      ┌────────────────────────────┬─────────────┬─────────┐ │
-    │      │ Title                      │ Status      │ Type    │ │
-    │      ├────────────────────────────┼─────────────┼─────────┤ │
-    │      │ Welcome! Start here        │ TODO        │ TASK    │ │
-    │      │ Try creating a new task    │ TODO        │ FEATURE │ │
-    │      │ Explore the dashboard      │ IN_PROGRESS │ TASK    │ │
-    │      │ Completed example task     │ DONE        │ TASK    │ │
-    │      │ Sample bug to fix          │ TODO        │ BUG     │ │
-    │      └────────────────────────────┴─────────────┴─────────┘ │
+    │  5.1 Workspace: "Demo Workspace"                            │
+    │  5.2 WorkspaceMember: role = OWNER                          │
+    │  5.3 Project: "Sample Project" (ACTIVE, 30%)                │
+    │  5.4 ProjectMember: role = MANAGER                          │
+    │  5.5 Tasks (5 tasks):                                       │
+    │      - Welcome! Start here (TODO, HIGH)                     │
+    │      - Try creating a new task (TODO, MEDIUM)               │
+    │      - Explore the dashboard (IN_PROGRESS, MEDIUM)          │
+    │      - Completed example task (DONE, LOW)                   │
+    │      - Sample bug to fix (TODO, HIGH)                       │
     └─────────────────────────────────────────────────────────────┘
                   │
                   ▼
     ┌─────────────────────────────────────────────────────────────┐
     │  STEP 6: GENERATE JWT TOKENS                                │
-    │  ────────────────────────────                               │
-    │  accessToken = sign({                                       │
-    │    sub: userId,                                             │
-    │    email: "guest_xxx@guest.local",                          │
-    │    jti: "unique-token-id"                                   │
-    │  }, JWT_SECRET)                                             │
-    │                                                             │
-    │  refreshToken = sign({                                      │
-    │    userId: userId,                                          │
-    │    jti: "unique-refresh-id"                                 │
-    │  }, JWT_REFRESH_SECRET)                                     │
     └─────────────────────────────────────────────────────────────┘
                   │
                   ▼
     ┌─────────────────────────────────────────────────────────────┐
     │  STEP 7: RETURN RESPONSE                                    │
-    │  ────────────────────────                                   │
     │  {                                                          │
-    │    "accessToken": "eyJhbG...",                              │
-    │    "refreshToken": "eyJhbG...",                             │
-    │    "user": {                                                │
-    │      "id": "uuid-xyz",                                      │
-    │      "email": "guest_a1b2c3d4@guest.local",                 │
-    │      "name": "Guest A1B2C3D4"                               │
-    │    },                                                       │
-    │    "isGuest": true,                                         │
-    │    "remainingSessions": 2                                   │
+    │    accessToken, refreshToken,                               │
+    │    user: { id, email, name },                               │
+    │    isGuest: true,                                           │
+    │    remainingSessions: 2                                     │
     │  }                                                          │
-    └─────────────────────────────────────────────────────────────┘
-                  │
-                  ▼
-    ┌─────────────────────────────────────────────────────────────┐
-    │  FRONTEND (AuthContext.jsx)                                 │
-    │  - Lưu tokens vào localStorage                              │
-    │  - Lưu user info (với isGuest flag)                         │
-    │  - Redirect to Dashboard "/"                                │
-    │  - Toast: "Welcome, Guest! You have X sessions remaining."  │
     └─────────────────────────────────────────────────────────────┘
 
 ================================================================================
 
-3. SCENARIOS (VÍ DỤ CỤ THỂ)
+3. DATABASE SCHEMA
+--------------------------------------------------------------------------------
+
+TABLE: guest_sessions
+┌─────────────────────┬──────────────┬─────────────────────────────┐
+│ Column              │ Type         │ Description                 │
+├─────────────────────┼──────────────┼─────────────────────────────┤
+│ id                  │ UUID (PK)    │ Primary key                 │
+│ ip_address          │ VARCHAR      │ Client IP address (indexed) │
+│ device_fingerprint  │ VARCHAR      │ Browser fingerprint         │
+│ user_id             │ UUID (FK)    │ Reference to users table    │
+│ expires_at          │ TIMESTAMP    │ Session expiry (extends)    │
+│ login_count         │ INTEGER      │ Số lần login (max 3)        │
+│ created_at          │ TIMESTAMP    │ Auto                        │
+│ updated_at          │ TIMESTAMP    │ Auto                        │
+└─────────────────────┴──────────────┴─────────────────────────────┘
+
+TABLE: users (AuthProvider enum)
+┌─────────────────────┬──────────────┬─────────────────────────────┐
+│ provider            │ ENUM         │ LOCAL, GOOGLE, GITHUB,      │
+│                     │              │ GUEST  <-- NEW              │
+└─────────────────────┴──────────────┴─────────────────────────────┘
+
+================================================================================
+
+4. SCENARIOS (VÍ DỤ CỤ THỂ)
 --------------------------------------------------------------------------------
 
 SCENARIO 1: User mới lần đầu vào
@@ -197,6 +182,7 @@ SCENARIO 1: User mới lần đầu vào
   IP: 192.168.1.100, Fingerprint: "abc123"
 
   Click Guest → Không tìm thấy session
+            → Check daily limit: 0/3 → OK
             → Tạo Guest_AAA (loginCount = 1)
             → Tạo Workspace + Project + Tasks
             → Return tokens, remainingSessions = 2
@@ -231,126 +217,87 @@ SCENARIO 4: User quay lại lần 4 (HẾT LƯỢT)
 
 SCENARIO 5: User dùng browser khác (fingerprint khác)
 ─────────────────────────────────────────────────────
-  IP: 192.168.1.100, Fingerprint: "xyz789" (khác)
+  IP: 192.168.1.100, Fingerprint: "xyz789" (khác abc123)
 
   Click Guest → Không tìm thấy session với fingerprint này
+            → Check daily limit: 1/3 (đã có Guest_AAA) → OK
             → Tạo Guest_BBB mới (loginCount = 1)
             → Tạo Workspace + Project + Tasks riêng
             → Return tokens, remainingSessions = 2
 
+SCENARIO 6: User tạo quá 3 session trong ngày (đổi fingerprint spam)
+────────────────────────────────────────────────────────────────────
+  IP: 192.168.1.100
+  Đã tạo: Guest_AAA (fp: abc), Guest_BBB (fp: xyz), Guest_CCC (fp: 123)
+  Fingerprint mới: "999"
+
+  Click Guest → Không tìm thấy session với fingerprint "999"
+            → Check daily limit: 3/3 → REJECT
+            → Error: "Max 3 guest sessions per day"
+
 ================================================================================
 
-3. DATABASE SCHEMA
+5. GIỚI HẠN TÓM TẮT
 --------------------------------------------------------------------------------
 
-TABLE: guest_sessions
-┌─────────────────────┬──────────────┬─────────────────────────────┐
-│ Column              │ Type         │ Description                 │
-├─────────────────────┼──────────────┼─────────────────────────────┤
-│ id                  │ UUID (PK)    │ Primary key                 │
-│ ip_address          │ VARCHAR      │ Client IP address (indexed) │
-│ device_fingerprint  │ VARCHAR      │ Browser fingerprint         │
-│ user_id             │ UUID (FK)    │ Reference to users table    │
-│ expires_at          │ TIMESTAMP    │ Session expiry (extends)    │
-│ login_count         │ INTEGER      │ Number of logins (max 3)    │
-│ created_at          │ TIMESTAMP    │ Auto                        │
-│ updated_at          │ TIMESTAMP    │ Auto                        │
-└─────────────────────┴──────────────┴─────────────────────────────┘
-
-TABLE: users (updated)
-┌─────────────────────┬──────────────┬─────────────────────────────┐
-│ Column              │ Type         │ Values                      │
-├─────────────────────┼──────────────┼─────────────────────────────┤
-│ provider            │ ENUM         │ LOCAL, GOOGLE, GITHUB,      │
-│                     │              │ GUEST  <-- NEW              │
-└─────────────────────┴──────────────┴─────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│  LIMIT 1: loginCount per Session                                │
+│  ───────────────────────────────                                │
+│  - Mỗi session (IP + Fingerprint) được login tối đa 3 lần      │
+│  - Sau 3 lần → user phải đăng ký account thật                   │
+│  - Data vẫn giữ nguyên qua các lần login                        │
+│                                                                 │
+│  LIMIT 2: Daily Session Count per IP                            │
+│  ───────────────────────────────────                            │
+│  - Mỗi IP được tạo tối đa 3 session MỚI trong ngày              │
+│  - Chống spam bằng cách đổi fingerprint liên tục                │
+│  - Reset mỗi ngày (00:00:00)                                    │
+└─────────────────────────────────────────────────────────────────┘
 
 ================================================================================
 
-4. API ENDPOINT
+6. API ENDPOINT
 --------------------------------------------------------------------------------
 
 POST /api/auth/guest
-────────────────────
 
 Request:
-  Headers:
-    Content-Type: application/json
-
-  Body:
-    {
-      "deviceFingerprint": "string (optional)"
-    }
+  Body: { "deviceFingerprint": "string (optional)" }
 
 Response (Success - 200):
-    {
-      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "user": {
-        "id": "550e8400-e29b-41d4-a716-446655440000",
-        "email": "guest_a1b2c3d4@guest.local",
-        "name": "Guest A1B2C3D4"
-      },
-      "isGuest": true,
-      "remainingSessions": 2
-    }
+  {
+    "accessToken": "eyJhbG...",
+    "refreshToken": "eyJhbG...",
+    "user": { "id": "uuid", "email": "guest_xxx@guest.local", "name": "Guest XXX" },
+    "isGuest": true,
+    "remainingSessions": 2
+  }
 
 Response (Error - 400):
-    {
-      "statusCode": 400,
-      "message": "Maximum 3 guest sessions allowed per device. Please register for unlimited access.",
-      "error": "Bad Request"
-    }
-
-Rate Limit: 3 requests per 60 seconds (Throttle)
+  - "Maximum 3 guest logins reached. Please register for unlimited access."
+  - "Maximum 3 guest sessions allowed per device per day. Please register..."
 
 ================================================================================
 
-5. FILES CHANGED
+7. FILES
 --------------------------------------------------------------------------------
 
 BACKEND:
   libs/entity/src/entities/
-    ├── guest-session.entity.ts      (NEW)  - Guest session tracking
-    ├── user.entity.ts               (MOD)  - Add GUEST to AuthProvider
-    └── index.ts                     (MOD)  - Export GuestSession
+    ├── guest-session.entity.ts      - GuestSession entity với loginCount
+    ├── user.entity.ts               - AuthProvider.GUEST
+    └── index.ts
 
   apps/app-api/src/domain/auth/
-    ├── dto/
-    │   ├── guest-login.dto.ts       (NEW)  - Request DTO
-    │   ├── login-response.dto.ts    (MOD)  - Add isGuest, remainingSessions
-    │   └── index.ts                 (MOD)  - Export GuestLoginDto
-    ├── controller/
-    │   └── auth-public.controller.ts (MOD) - Add POST /auth/guest
-    ├── service/
-    │   └── auth.service.ts          (MOD)  - Add guestLogin(), createGuestSeedData()
-    └── auth.module.ts               (MOD)  - Register GuestSession entity
+    ├── dto/guest-login.dto.ts       - Request DTO
+    ├── dto/login-response.dto.ts    - isGuest, remainingSessions
+    ├── controller/auth-public.controller.ts - POST /auth/guest
+    ├── service/auth.service.ts      - guestLogin(), createGuestSeedData()
+    └── auth.module.ts               - Register GuestSession entity
 
 FRONTEND:
   client/src/
-    ├── context/AuthContext.jsx      (MOD)  - Add guestLogin() method
-    └── pages/Login.jsx              (MOD)  - Add Guest button
-
-================================================================================
-
-6. SECURITY NOTES
---------------------------------------------------------------------------------
-
-1. IP-based limiting:
-   - Dễ bypass bằng VPN/Proxy
-   - Có thể false positive với shared IP (office, public wifi)
-   - Kết hợp với device fingerprint để tăng độ chính xác
-
-2. Guest data isolation:
-   - Mỗi guest có workspace/project riêng
-   - Không access được data của user khác
-
-3. Session expiry:
-   - Guest session hết hạn sau 1 ngày
-   - Sau 1 ngày, cùng IP có thể tạo 3 guest mới
-
-4. JWT tokens:
-   - Guest dùng JWT token như user thường
-   - Không phân biệt guest/user trong các API khác
+    ├── context/AuthContext.jsx      - guestLogin() method
+    └── pages/Login.jsx              - Guest button
 
 ================================================================================
