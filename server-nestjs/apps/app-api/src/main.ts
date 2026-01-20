@@ -7,11 +7,11 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Enable CORS
-   app.enableCors({
+  app.enableCors({
     origin: [
-      'https://project-management.cheaptest.online',
-      'https://www.project-management.cheaptest.online', 
-      'http://localhost:3001', 
+      'https://pm.cheaptest.online',
+      'https://www.pm.cheaptest.online',
+      'http://localhost:3001',
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
