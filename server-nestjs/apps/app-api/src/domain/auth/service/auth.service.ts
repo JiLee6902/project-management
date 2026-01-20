@@ -2,7 +2,24 @@ import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User, AuthProvider } from '@app/entity/entities';
+import {
+  User,
+  AuthProvider,
+  GuestSession,
+  Workspace,
+  WorkspaceMember,
+  WorkspaceRole,
+  Project,
+  ProjectMember,
+  ProjectRole,
+  ProjectStatus,
+  Priority,
+  Task,
+  TaskStatus,
+  TaskPriority,
+  TaskType,
+} from '@app/entity/entities';
+import { v4 as uuidv4 } from 'uuid';
 import { RedisService } from '@app/external-infra';
 import { AuthRepository } from '../repository/auth.repository';
 import { TokenService } from './token.service';
@@ -260,6 +277,187 @@ export class AuthService {
       throw error;
     } finally {
       await queryRunner.release();
+    }
+  }
+
+  async guestLogin(ipAddress: string, deviceFingerprint?: string): Promise<LoginResponseDto> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    const MAX_GUEST_SESSIONS = 3;
+    const GUEST_SESSION_EXPIRY_DAYS = 1;
+
+    try {
+      // Count existing guest sessions for this IP/device
+      const guestSessionRepo = queryRunner.manager.getRepository(GuestSession);
+
+      const sessionCount = await guestSessionRepo.count({
+        where: [
+          { ipAddress, expiresAt: new Date() > new Date() ? undefined : undefined },
+          ...(deviceFingerprint ? [{ deviceFingerprint }] : []),
+        ].filter(Boolean),
+      });
+
+      // More accurate count query
+      const activeSessionCount = await guestSessionRepo
+        .createQueryBuilder('session')
+        .where('session.ip_address = :ipAddress', { ipAddress })
+        .andWhere('session.expires_at > :now', { now: new Date() })
+        .getCount();
+
+      if (activeSessionCount >= MAX_GUEST_SESSIONS) {
+        throw new BadRequestException(
+          `Maximum ${MAX_GUEST_SESSIONS} guest sessions allowed per device. Please register for unlimited access.`,
+        );
+      }
+
+      // Create guest user with unique email
+      const guestId = uuidv4().substring(0, 8);
+      const guestEmail = `guest_${guestId}@guest.local`;
+      const guestName = `Guest ${guestId.toUpperCase()}`;
+
+      const userRepo = queryRunner.manager.getRepository(User);
+      const user = userRepo.create({
+        email: guestEmail,
+        name: guestName,
+        provider: AuthProvider.GUEST,
+        password: null,
+      });
+      await userRepo.save(user);
+
+      // Create guest session record
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + GUEST_SESSION_EXPIRY_DAYS);
+
+      const guestSession = guestSessionRepo.create({
+        ipAddress,
+        deviceFingerprint: deviceFingerprint || null,
+        userId: user.id,
+        expiresAt,
+      });
+      await guestSessionRepo.save(guestSession);
+
+      // Create seed data for guest
+      await this.createGuestSeedData(user, queryRunner);
+
+      // Generate tokens
+      const [accessToken, refreshToken] = await Promise.all([
+        this.tokenService.generateAccessToken(user),
+        this.tokenService.generateRefreshToken(user, queryRunner),
+      ]);
+
+      await queryRunner.commitTransaction();
+
+      return {
+        accessToken,
+        refreshToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        },
+        isGuest: true,
+        remainingSessions: MAX_GUEST_SESSIONS - activeSessionCount - 1,
+      } as LoginResponseDto & { isGuest: boolean; remainingSessions: number };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  private async createGuestSeedData(user: User, queryRunner: any): Promise<void> {
+    const workspaceRepo = queryRunner.manager.getRepository(Workspace);
+    const workspaceMemberRepo = queryRunner.manager.getRepository(WorkspaceMember);
+    const projectRepo = queryRunner.manager.getRepository(Project);
+    const projectMemberRepo = queryRunner.manager.getRepository(ProjectMember);
+    const taskRepo = queryRunner.manager.getRepository(Task);
+
+    // 1. Create Demo Workspace
+    const workspace = workspaceRepo.create({
+      name: 'Demo Workspace',
+      slug: `demo-workspace-${user.id.substring(0, 8)}`,
+      description: 'Welcome to your demo workspace! Explore all features here.',
+      ownerId: user.id,
+    });
+    await workspaceRepo.save(workspace);
+
+    // 2. Add user as workspace owner
+    const workspaceMember = workspaceMemberRepo.create({
+      userId: user.id,
+      workspaceId: workspace.id,
+      role: WorkspaceRole.OWNER,
+    });
+    await workspaceMemberRepo.save(workspaceMember);
+
+    // 3. Create Sample Project
+    const project = projectRepo.create({
+      name: 'Sample Project',
+      description: 'This is a sample project to help you get started. Feel free to explore!',
+      workspaceId: workspace.id,
+      teamLead: user.id,
+      status: ProjectStatus.ACTIVE,
+      priority: Priority.MEDIUM,
+      progress: 30,
+    });
+    await projectRepo.save(project);
+
+    // 4. Add user as project manager
+    const projectMember = projectMemberRepo.create({
+      userId: user.id,
+      projectId: project.id,
+      role: ProjectRole.MANAGER,
+    });
+    await projectMemberRepo.save(projectMember);
+
+    // 5. Create sample tasks
+    const sampleTasks = [
+      {
+        title: 'Welcome! Start here',
+        description: 'This is your first task. Click on it to see details and try editing it.',
+        status: TaskStatus.TODO,
+        priority: TaskPriority.HIGH,
+        type: TaskType.TASK,
+      },
+      {
+        title: 'Try creating a new task',
+        description: 'Click the "Add Task" button to create your own task.',
+        status: TaskStatus.TODO,
+        priority: TaskPriority.MEDIUM,
+        type: TaskType.FEATURE,
+      },
+      {
+        title: 'Explore the dashboard',
+        description: 'Check out the dashboard to see project analytics and progress.',
+        status: TaskStatus.IN_PROGRESS,
+        priority: TaskPriority.MEDIUM,
+        type: TaskType.TASK,
+      },
+      {
+        title: 'Completed example task',
+        description: 'This task is already done. Drag tasks between columns to change status.',
+        status: TaskStatus.DONE,
+        priority: TaskPriority.LOW,
+        type: TaskType.TASK,
+      },
+      {
+        title: 'Sample bug to fix',
+        description: 'This is an example bug. Try changing its priority or status.',
+        status: TaskStatus.TODO,
+        priority: TaskPriority.HIGH,
+        type: TaskType.BUG,
+      },
+    ];
+
+    for (const taskData of sampleTasks) {
+      const task = taskRepo.create({
+        ...taskData,
+        projectId: project.id,
+        assigneeId: user.id,
+      });
+      await taskRepo.save(task);
     }
   }
 }

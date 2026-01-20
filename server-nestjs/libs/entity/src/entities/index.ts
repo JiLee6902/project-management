@@ -28,3 +28,4 @@ export * from './recurring-task.entity';
 export * from './audit-log.entity';
 export * from './permission.entity';
 export * from './role.entity';
+export * from './guest-session.entity';

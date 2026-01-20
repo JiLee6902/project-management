@@ -1,7 +1,8 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Req } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { Request } from 'express';
 import { AuthService } from '../service/auth.service';
-import { RegisterDto, LoginDto, RefreshTokenDto, LoginResponseDto } from '../dto';
+import { RegisterDto, LoginDto, RefreshTokenDto, LoginResponseDto, GuestLoginDto } from '../dto';
 import { Public } from '../decorator/public.decorator';
 
 @Controller('auth')
@@ -28,5 +29,21 @@ export class AuthPublicController {
   @HttpCode(HttpStatus.OK)
   async refresh(@Body() refreshTokenDto: RefreshTokenDto): Promise<LoginResponseDto> {
     return this.authService.refresh(refreshTokenDto);
+  }
+
+  @Public()
+  @Post('guest')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  async guestLogin(
+    @Body() guestLoginDto: GuestLoginDto,
+    @Req() req: Request,
+  ): Promise<LoginResponseDto> {
+    const ipAddress = req.ip ||
+      req.headers['x-forwarded-for']?.toString().split(',')[0] ||
+      req.socket.remoteAddress ||
+      'unknown';
+
+    return this.authService.guestLogin(ipAddress, guestLoginDto.deviceFingerprint);
   }
 }

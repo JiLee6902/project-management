@@ -115,6 +115,27 @@ export function AuthProvider({ children }) {
     setIsSignedIn(true);
   };
 
+  const guestLogin = async (deviceFingerprint) => {
+    try {
+      const response = await api.post('/auth/guest', { deviceFingerprint });
+      const { user, accessToken, refreshToken, isGuest, remainingSessions } = response.data;
+
+      localStorage.setItem(TOKEN_KEY, accessToken);
+      localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+      localStorage.setItem(USER_KEY, JSON.stringify({ ...user, isGuest }));
+
+      setUser({ ...user, isGuest });
+      setIsSignedIn(true);
+
+      return { success: true, remainingSessions };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Guest login failed',
+      };
+    }
+  };
+
   const value = {
     user,
     isLoaded,
@@ -125,6 +146,7 @@ export function AuthProvider({ children }) {
     getToken,
     refreshAccessToken,
     setAuthFromOAuth,
+    guestLogin,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

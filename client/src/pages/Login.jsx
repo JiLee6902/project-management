@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux';
 import { useAuth } from '../context/AuthContext';
 import { resetWorkspaceState } from '../features/workspaceSlice';
 import toast from 'react-hot-toast';
-import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, UserCircle } from 'lucide-react';
 
 // Get the API base URL for OAuth (without /apila suffix)
 const getOAuthBaseUrl = () => {
@@ -18,7 +18,8 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const [guestLoading, setGuestLoading] = useState(false);
+  const { login, guestLogin } = useAuth();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -46,6 +47,30 @@ export default function Login() {
 
   const handleGithubLogin = () => {
     window.location.href = `${getOAuthBaseUrl()}/auth/github`;
+  };
+
+  const handleGuestLogin = async () => {
+    setGuestLoading(true);
+
+    // Generate a simple device fingerprint
+    const fingerprint = btoa(
+      `${navigator.userAgent}-${screen.width}x${screen.height}-${new Date().getTimezoneOffset()}`
+    );
+
+    const result = await guestLogin(fingerprint);
+
+    if (result.success) {
+      const message = result.remainingSessions > 0
+        ? `Welcome, Guest! You have ${result.remainingSessions} guest session(s) remaining.`
+        : 'Welcome, Guest! This is your last guest session.';
+      toast.success(message);
+      dispatch(resetWorkspaceState());
+      navigate('/');
+    } else {
+      toast.error(result.error);
+    }
+
+    setGuestLoading(false);
   };
 
   return (
@@ -218,7 +243,7 @@ export default function Login() {
           </div>
 
           {/* Social Login */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 mb-4">
             <button
               type="button"
               onClick={handleGoogleLogin}
@@ -243,6 +268,27 @@ export default function Login() {
               GitHub
             </button>
           </div>
+
+          {/* Guest Login */}
+          <button
+            type="button"
+            onClick={handleGuestLogin}
+            disabled={guestLoading}
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 border-0 rounded-xl text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {guestLoading ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Signing in as Guest...
+              </>
+            ) : (
+              <>
+                <UserCircle className="h-5 w-5" />
+                Continue as Guest
+                <span className="text-xs opacity-75">(3 times per device)</span>
+              </>
+            )}
+          </button>
 
           {/* Sign Up Link */}
           <p className="mt-8 text-center text-sm text-zinc-600 dark:text-zinc-400">

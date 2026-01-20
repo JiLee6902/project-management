@@ -6,4 +6,6 @@ export class LoginResponseDto {
     email: string;
     name?: string;
   };
+  isGuest?: boolean;
+  remainingSessions?: number;
 }

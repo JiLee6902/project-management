@@ -4,7 +4,7 @@ import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
-import { User, UserRefreshToken } from '@app/entity/entities';
+import { User, UserRefreshToken, GuestSession } from '@app/entity/entities';
 import { RedisModule } from '@app/external-infra';
 import { RolesGuard } from '@app/shared-libs';
 
@@ -37,7 +37,7 @@ import { GithubAuthGuard } from './guard/github-auth.guard';
       }),
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([User, UserRefreshToken]),
+    TypeOrmModule.forFeature([User, UserRefreshToken, GuestSession]),
     RedisModule,
   ],
   controllers: [AuthPublicController, AuthPrivateController, AuthOAuthController],
