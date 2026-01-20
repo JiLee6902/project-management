@@ -293,6 +293,7 @@ export class AuthService {
       const userRepo = queryRunner.manager.getRepository(User);
 
       // STEP 1: Check if this IP + fingerprint has an existing session
+      // Mỗi IP + fingerprint chỉ có 1 record duy nhất
       const existingSession = await guestSessionRepo
         .createQueryBuilder('session')
         .leftJoinAndSelect('session.user', 'user')
@@ -303,7 +304,6 @@ export class AuthService {
             : 'session.device_fingerprint IS NULL',
           { fingerprint: deviceFingerprint },
         )
-        .orderBy('session.created_at', 'DESC')
         .getOne();
 
       if (existingSession) {
