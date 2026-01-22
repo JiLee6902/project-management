@@ -38,6 +38,7 @@ import {
   AuditLog,
   Permission,
   Role,
+  GuestSession,
 } from '@app/entity';
 
 import { AuthModule } from './domain/auth/auth.module';
@@ -136,6 +137,7 @@ import { PermissionModule } from './domain/permission/permission.module';
           AuditLog,
           Permission,
           Role,
+          GuestSession,
         ],
         synchronize: configService.get<string>('TYPEORM_SYNCHRONIZE') === 'true' || configService.get<string>('NODE_ENV') === 'development',
         logging:
