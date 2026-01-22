@@ -99,7 +99,12 @@ const TaskDetails = () => {
         try {
             toast.loading("Adding comment...");
 
-            await api.post(`/comments`, { taskId: task.id, content: newComment });
+            const { data } = await api.post(`/comments`, { taskId: task.id, content: newComment });
+
+            // Update state immediately to show comment without refresh
+            if (data.comment) {
+                setComments((prev) => [...prev, data.comment]);
+            }
 
             setNewComment("");
             toast.dismissAll();
