@@ -1,8 +1,9 @@
 services:
   # Migration job - run separately before deploying apps
   # Usage: docker-compose -f docker-compose.prod.yml run --rm migration
+  # Dùng chung app-api image (không cần build riêng migration image!)
   migration:
-    image: ${REGISTRY}/pm-migration:${VERSION}
+    image: ${REGISTRY}/pm-app-api:${VERSION}
     container_name: pm-migration
     env_file:
       - .env.production
@@ -19,6 +20,8 @@ services:
           cpus: '0.25'
           memory: 128M
     restart: "no"
+    # Override command để chạy migration thay vì chạy app
+    command: ["node", "node_modules/typeorm/cli.js", "migration:run", "-d", "dist/libs/entity/src/data-source.js"]
 
   postgres:
     image: postgres:15-alpine
@@ -26,10 +29,6 @@ services:
     restart: unless-stopped
     env_file:
       - .env.production
-    environment:
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
     ports:
       - "5432:5432"
     volumes:
@@ -42,7 +41,7 @@ services:
           cpus: '0.5'
           memory: 192M
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}" ]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d project_management" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -161,7 +160,6 @@ services:
     depends_on:
       - postgres
       - redis
-      - kafka
     ports:
       - "3000:3000"
     environment:
@@ -194,7 +192,6 @@ services:
     depends_on:
       - postgres
       - redis
-      - kafka
     ports:
       - "3002:3002"
     environment:
@@ -226,7 +223,6 @@ services:
     depends_on:
       - postgres
       - redis
-      - kafka
     environment:
       NODE_ENV: production
       PORT: 3003
