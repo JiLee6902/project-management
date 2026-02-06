@@ -20,7 +20,7 @@ RUN npm run build:${APP_NAME}
 
 # Compile migration data-source separately (webpack bundles to single file, migration CLI needs individual files)
 RUN npx tsc libs/entity/src/data-source.migration.ts libs/entity/src/migrations/*.ts \
-    --outDir dist --module commonjs --target ES2023 \
+    --outDir dist --rootDir . --module commonjs --target ES2023 \
     --esModuleInterop --experimentalDecorators --emitDecoratorMetadata \
     --skipLibCheck --resolveJsonModule
 
