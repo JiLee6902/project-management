@@ -15,8 +15,8 @@ const KanbanColumn = ({ status, tasks }) => {
     const config = columnConfig[status] || { title: status, bgColor: "bg-zinc-100 dark:bg-zinc-800/50" };
 
     return (
-        <div className="flex-1 min-w-[280px] max-w-[350px]">
-            <div className={`rounded-lg ${config.bgColor} p-3`}>
+        <div className="flex-1 min-w-[280px] max-w-[350px] flex flex-col">
+            <div className={`rounded-lg ${config.bgColor} p-3 flex flex-col flex-1`}>
                 <div className="flex items-center justify-between mb-3">
                     <h3 className="font-semibold text-zinc-900 dark:text-zinc-100">
                         {config.title}
@@ -28,7 +28,7 @@ const KanbanColumn = ({ status, tasks }) => {
 
                 <div
                     ref={setNodeRef}
-                    className={`space-y-2 min-h-[200px] transition-colors rounded-lg p-1 pb-8 ${
+                    className={`space-y-2 min-h-[200px] flex-1 transition-colors rounded-lg p-1 pb-8 ${
                         isOver ? "bg-zinc-200 dark:bg-zinc-700" : ""
                     }`}
                 >

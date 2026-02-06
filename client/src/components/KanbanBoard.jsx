@@ -87,7 +87,7 @@ const KanbanBoard = ({ tasks = [] }) => {
             onDragEnd={handleDragEnd}
             onDragOver={handleDragOver}
         >
-            <div className="flex gap-4 overflow-x-auto pb-4">
+            <div className="flex gap-4 overflow-x-auto pb-4 items-stretch">
                 {STATUSES.map((status) => (
                     <KanbanColumn
                         key={status}

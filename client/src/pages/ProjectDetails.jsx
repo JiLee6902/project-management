@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeftIcon, PlusIcon, SettingsIcon, BarChart3Icon, CalendarIcon, FileStackIcon, ZapIcon } from "lucide-react";
+import { fetchWorkspaces } from "../features/workspaceSlice";
+import api from "../configs/api";
+import toast from "react-hot-toast";
 import ProjectAnalytics from "../components/ProjectAnalytics";
 import ProjectSettings from "../components/ProjectSettings";
 import CreateTaskDialog from "../components/CreateTaskDialog";
@@ -16,6 +19,7 @@ export default function ProjectDetail() {
     const id = searchParams.get('id');
 
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const projects = useSelector((state) => state?.workspace?.currentWorkspace?.projects || []);
 
     const [project, setProject] = useState(null);
@@ -69,9 +73,31 @@ export default function ProjectDetail() {
                     </button>
                     <div className="flex items-center gap-3">
                         <h1 className="text-xl font-medium">{project.name}</h1>
-                        <span className={`px-2 py-1 rounded text-xs capitalize ${statusColors[project.status]}`} >
-                            {project.status.replace("_", " ")}
-                        </span>
+                        <select
+                            value={project.status}
+                            onChange={async (e) => {
+                                const newStatus = e.target.value;
+                                try {
+                                    toast.loading("Updating status...");
+                                    await api.put(`/projects/${project.id}`, { status: newStatus });
+                                    dispatch(fetchWorkspaces());
+                                    toast.dismissAll();
+                                    toast.success("Project status updated");
+                                } catch (error) {
+                                    toast.dismissAll();
+                                    toast.error(error?.response?.data?.message || error.message);
+                                }
+                            }}
+                            className={`px-2 py-1 rounded text-xs capitalize cursor-pointer border-none outline-none ${statusColors[project.status]}`}
+                        >
+                            <option value="PLANNING">Planning</option>
+                            <option value="ACTIVE">Active</option>
+                            <option value="ON_HOLD">On Hold</option>
+                            <option value="COMPLETED">Completed</option>
+                            <option value="CANCELLED">Cancelled</option>
+                            <option value="CLOSED">Closed</option>
+                            <option value="REOPEN">Reopen</option>
+                        </select>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">

@@ -58,8 +58,8 @@ export default function StatsGrid() {
                     (p) => p.status !== "CANCELLED" && p.status !== "COMPLETED"
                 ).length,
                 completedProjects: currentWorkspace.projects
-                    .filter((p) => p.status === "COMPLETED")
-                    .reduce((acc, project) => acc + project.tasks.length, 0),
+                    .filter((p) => p.status === "COMPLETED" || p.status === "CLOSED")
+                    .length,
                 myTasks: currentWorkspace.projects.reduce(
                     (acc, project) =>
                         acc +
