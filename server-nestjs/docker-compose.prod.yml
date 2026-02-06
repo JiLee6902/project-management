@@ -19,7 +19,7 @@ services:
           cpus: '0.25'
           memory: 128M
     restart: "no"
-    command: ["node", "node_modules/typeorm/cli.js", "migration:run", "-d", "dist/libs/entity/src/data-source.js"]
+    command: ["node", "node_modules/typeorm/cli.js", "migration:run", "-d", "dist/libs/entity/src/data-source.migration.js"]
 
   postgres:
     image: postgres:15-alpine

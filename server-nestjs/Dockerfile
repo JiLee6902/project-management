@@ -18,6 +18,12 @@ ARG APP_NAME=app-api
 # Build the application
 RUN npm run build:${APP_NAME}
 
+# Compile migration data-source separately (webpack bundles to single file, migration CLI needs individual files)
+RUN npx tsc libs/entity/src/data-source.migration.ts libs/entity/src/migrations/*.ts \
+    --outDir dist --module commonjs --target ES2023 \
+    --esModuleInterop --experimentalDecorators --emitDecoratorMetadata \
+    --skipLibCheck --resolveJsonModule
+
 # Production stage
 FROM node:20-alpine AS production
 
