@@ -134,6 +134,8 @@ export default function EditTaskDialog({ isOpen, onClose, task, projectId }) {
                                 <option value="TODO">To Do</option>
                                 <option value="IN_PROGRESS">In Progress</option>
                                 <option value="DONE">Done</option>
+                                <option value="CLOSED">Closed</option>
+                                <option value="REOPEN">Reopen</option>
                             </select>
                         </div>
                     </div>

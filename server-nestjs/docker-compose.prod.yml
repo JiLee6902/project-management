@@ -1,14 +1,13 @@
 services:
-  # Migration job - run separately before deploying apps
-  # Usage: docker-compose -f docker-compose.prod.yml run --rm migration
-  # Dùng chung app-api image (không cần build riêng migration image!)
+  # Migration job - runs automatically before app services start
   migration:
     image: ${REGISTRY}/pm-app-api:${VERSION}
     container_name: pm-migration
     env_file:
       - .env.production
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       NODE_ENV: production
       NODE_OPTIONS: "--max-old-space-size=128"
@@ -20,7 +19,6 @@ services:
           cpus: '0.25'
           memory: 128M
     restart: "no"
-    # Override command để chạy migration thay vì chạy app
     command: ["node", "node_modules/typeorm/cli.js", "migration:run", "-d", "dist/libs/entity/src/data-source.js"]
 
   postgres:
@@ -158,14 +156,15 @@ services:
     env_file:
       - .env.production
     depends_on:
-      - postgres
-      - redis
+      migration:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
     ports:
       - "3000:3000"
     environment:
       NODE_ENV: production
       PORT: 3000
-      RUN_MIGRATIONS: "false"  # Migrations run separately in CI/CD
       NODE_OPTIONS: "--max-old-space-size=150"
     volumes:
       - app_api_logs:/app/logs
@@ -190,8 +189,10 @@ services:
     env_file:
       - .env.production
     depends_on:
-      - postgres
-      - redis
+      migration:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
     ports:
       - "3002:3002"
     environment:
@@ -221,8 +222,10 @@ services:
     env_file:
       - .env.production
     depends_on:
-      - postgres
-      - redis
+      migration:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
     environment:
       NODE_ENV: production
       PORT: 3003

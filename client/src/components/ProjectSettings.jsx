@@ -142,6 +142,8 @@ export default function ProjectSettings({ project }) {
                                 <option value="ON_HOLD">On Hold</option>
                                 <option value="COMPLETED">Completed</option>
                                 <option value="CANCELLED">Cancelled</option>
+                                <option value="CLOSED">Closed</option>
+                                <option value="REOPEN">Reopen</option>
                             </select>
                         </div>
 

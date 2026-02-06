@@ -14,7 +14,7 @@ import { updateTask } from "../features/workspaceSlice";
 import KanbanColumn from "./KanbanColumn";
 import KanbanCard from "./KanbanCard";
 
-const STATUSES = ["TODO", "IN_PROGRESS", "DONE"];
+const STATUSES = ["TODO", "IN_PROGRESS", "DONE", "CLOSED", "REOPEN"];
 
 const KanbanBoard = ({ tasks = [] }) => {
     const dispatch = useDispatch();

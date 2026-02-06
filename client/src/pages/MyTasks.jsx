@@ -48,7 +48,7 @@ const MyTasks = () => {
   };
 
   const getDueDateInfo = (dueDate, status) => {
-    if (!dueDate || status === "DONE") return null;
+    if (!dueDate || status === "DONE" || status === "CLOSED") return null;
     const date = new Date(dueDate);
 
     if (isPast(date) && !isToday(date)) {
@@ -73,7 +73,7 @@ const MyTasks = () => {
       >
         <div className="flex items-start gap-3">
           <div className="mt-0.5">
-            {task.status === "DONE" ? (
+            {task.status === "DONE" || task.status === "CLOSED" ? (
               <CheckCircle2 className="size-5 text-green-500" />
             ) : task.status === "IN_PROGRESS" ? (
               <Clock className="size-5 text-blue-500" />
@@ -83,7 +83,7 @@ const MyTasks = () => {
           </div>
 
           <div className="flex-1 min-w-0">
-            <h3 className={`text-sm font-medium ${task.status === "DONE" ? "line-through text-zinc-500" : "text-zinc-900 dark:text-white"}`}>
+            <h3 className={`text-sm font-medium ${task.status === "DONE" || task.status === "CLOSED" ? "line-through text-zinc-500" : "text-zinc-900 dark:text-white"}`}>
               {task.title}
             </h3>
 

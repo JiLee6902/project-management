@@ -26,7 +26,7 @@ const priorityTexts = {
 };
 
 const getDueDateStatus = (dueDate, status) => {
-    if (!dueDate || status === "DONE") return null;
+    if (!dueDate || status === "DONE" || status === "CLOSED") return null;
     const date = new Date(dueDate);
     if (isPast(date) && !isToday(date)) {
         return { label: "Overdue", color: "text-red-500 dark:text-red-400", bg: "bg-red-100 dark:bg-red-900/30", icon: AlertCircle };
@@ -135,6 +135,8 @@ const ProjectTasks = ({ tasks = [] }) => {
                             { label: "To Do", value: "TODO" },
                             { label: "In Progress", value: "IN_PROGRESS" },
                             { label: "Done", value: "DONE" },
+                            { label: "Closed", value: "CLOSED" },
+                            { label: "Reopen", value: "REOPEN" },
                         ],
                         type: [
                             { label: "All Types", value: "" },
@@ -280,6 +282,8 @@ const ProjectTasks = ({ tasks = [] }) => {
                                                         <option value="TODO">To Do</option>
                                                         <option value="IN_PROGRESS">In Progress</option>
                                                         <option value="DONE">Done</option>
+                                                        <option value="CLOSED">Closed</option>
+                                                        <option value="REOPEN">Reopen</option>
                                                     </select>
                                                 </td>
                                                 <td className="px-4 py-2">
@@ -404,6 +408,8 @@ const ProjectTasks = ({ tasks = [] }) => {
                                                 <option value="TODO">To Do</option>
                                                 <option value="IN_PROGRESS">In Progress</option>
                                                 <option value="DONE">Done</option>
+                                                <option value="CLOSED">Closed</option>
+                                                <option value="REOPEN">Reopen</option>
                                             </select>
                                         </div>
 

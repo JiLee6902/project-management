@@ -6,6 +6,8 @@ const columnConfig = {
     TODO: { title: "To Do", bgColor: "bg-zinc-100 dark:bg-zinc-800/50" },
     IN_PROGRESS: { title: "In Progress", bgColor: "bg-zinc-100 dark:bg-zinc-800/50" },
     DONE: { title: "Done", bgColor: "bg-zinc-100 dark:bg-zinc-800/50" },
+    CLOSED: { title: "Closed", bgColor: "bg-zinc-100 dark:bg-zinc-800/50" },
+    REOPEN: { title: "Reopen", bgColor: "bg-zinc-100 dark:bg-zinc-800/50" },
 };
 
 const KanbanColumn = ({ status, tasks }) => {
@@ -26,7 +28,7 @@ const KanbanColumn = ({ status, tasks }) => {
 
                 <div
                     ref={setNodeRef}
-                    className={`space-y-2 min-h-[200px] transition-colors rounded-lg p-1 ${
+                    className={`space-y-2 min-h-[200px] transition-colors rounded-lg p-1 pb-8 ${
                         isOver ? "bg-zinc-200 dark:bg-zinc-700" : ""
                     }`}
                 >

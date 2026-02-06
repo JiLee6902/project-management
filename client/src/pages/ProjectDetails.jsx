@@ -41,6 +41,8 @@ export default function ProjectDetail() {
         ON_HOLD: "bg-zinc-400 text-zinc-900 dark:bg-zinc-500 dark:text-zinc-100",
         COMPLETED: "bg-zinc-500 text-white dark:bg-zinc-400 dark:text-zinc-900",
         CANCELLED: "bg-zinc-600 text-white dark:bg-zinc-300 dark:text-zinc-800",
+        CLOSED: "bg-zinc-700 text-white dark:bg-zinc-200 dark:text-zinc-900",
+        REOPEN: "bg-zinc-300 text-zinc-800 dark:bg-zinc-600 dark:text-zinc-200",
     };
 
     if (!project) {

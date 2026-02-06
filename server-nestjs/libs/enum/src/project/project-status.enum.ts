@@ -4,4 +4,6 @@ export enum ProjectStatus {
   COMPLETED = 'COMPLETED',
   ON_HOLD = 'ON_HOLD',
   CANCELLED = 'CANCELLED',
+  CLOSED = 'CLOSED',
+  REOPEN = 'REOPEN',
 }
