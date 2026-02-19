@@ -274,7 +274,7 @@ export default function Login() {
             type="button"
             onClick={handleGuestLogin}
             disabled={guestLoading}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 border-0 rounded-xl text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-zinc-800 dark:bg-zinc-200 hover:bg-zinc-700 dark:hover:bg-zinc-300 border-0 rounded-xl text-white dark:text-zinc-900 font-medium active:scale-[0.97] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {guestLoading ? (
               <>

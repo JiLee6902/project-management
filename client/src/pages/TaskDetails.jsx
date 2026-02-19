@@ -183,15 +183,15 @@ const TaskDetails = () => {
         }
     }, [taskId, task]);
 
-    if (loading || workspaceLoading) return <div className="text-gray-500 dark:text-zinc-400 px-4 py-6">Loading task details...</div>;
-    if (!currentWorkspace) return <div className="text-gray-500 dark:text-zinc-400 px-4 py-6">Loading workspace...</div>;
+    if (loading || workspaceLoading) return <div className="text-zinc-500 dark:text-zinc-400 px-4 py-6">Loading task details...</div>;
+    if (!currentWorkspace) return <div className="text-zinc-500 dark:text-zinc-400 px-4 py-6">Loading workspace...</div>;
     if (!task) return <div className="text-red-500 px-4 py-6">Task not found.</div>;
 
     return (
-        <div className="flex flex-col-reverse lg:flex-row gap-6 sm:p-4 text-gray-900 dark:text-zinc-100 max-w-6xl mx-auto">
+        <div className="flex flex-col-reverse lg:flex-row gap-6 sm:p-4 text-zinc-900 dark:text-zinc-100 max-w-6xl mx-auto">
             <div className="w-full lg:w-2/3">
-                <div className="p-5 rounded-md  border border-gray-300 dark:border-zinc-800  flex flex-col lg:h-[80vh]">
-                    <h2 className="text-base font-semibold flex items-center gap-2 mb-4 text-gray-900 dark:text-white">
+                <div className="p-5 rounded-md  border border-zinc-300 dark:border-zinc-800  flex flex-col lg:h-[80vh]">
+                    <h2 className="text-base font-semibold flex items-center gap-2 mb-4 text-zinc-900 dark:text-white">
                         <MessageCircle className="size-5" /> Task Discussion ({comments.length})
                     </h2>
 
@@ -199,25 +199,25 @@ const TaskDetails = () => {
                         {comments.length > 0 ? (
                             <div className="flex flex-col gap-4 mb-6 mr-2">
                                 {comments.map((comment) => (
-                                    <div key={comment.id} className={`sm:max-w-4/5 dark:bg-gradient-to-br dark:from-zinc-800 dark:to-zinc-900 border border-gray-300 dark:border-zinc-700 p-3 rounded-md ${comment.user?.id === user?.id ? "ml-auto" : "mr-auto"}`} >
-                                        <div className="flex items-center gap-2 mb-1 text-sm text-gray-500 dark:text-zinc-400">
+                                    <div key={comment.id} className={`sm:max-w-4/5 dark:bg-gradient-to-br dark:from-zinc-800 dark:to-zinc-900 border border-zinc-300 dark:border-zinc-700 p-3 rounded-md ${comment.user?.id === user?.id ? "ml-auto" : "mr-auto"}`} >
+                                        <div className="flex items-center gap-2 mb-1 text-sm text-zinc-500 dark:text-zinc-400">
                                             <div className="size-5 rounded-full bg-zinc-600 dark:bg-zinc-500 flex items-center justify-center text-white text-xs">
                                                 {comment.user?.name?.charAt(0)?.toUpperCase() || 'U'}
                                             </div>
-                                            <span className="font-medium text-gray-900 dark:text-white">{comment.user?.name || 'Unknown'}</span>
-                                            <span className="text-xs text-gray-400 dark:text-zinc-600">
+                                            <span className="font-medium text-zinc-900 dark:text-white">{comment.user?.name || 'Unknown'}</span>
+                                            <span className="text-xs text-zinc-400 dark:text-zinc-600">
                                                 • {comment.createdAt ? format(new Date(comment.createdAt), "dd MMM yyyy, HH:mm") : ''}
                                             </span>
                                         </div>
                                         <p
-                                            className="text-sm text-gray-900 dark:text-zinc-200"
+                                            className="text-sm text-zinc-900 dark:text-zinc-200"
                                             dangerouslySetInnerHTML={{ __html: renderMentions(comment.content) }}
                                         />
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-gray-600 dark:text-zinc-500 mb-4 text-sm">No comments yet. Be the first!</p>
+                            <p className="text-zinc-600 dark:text-zinc-500 mb-4 text-sm">No comments yet. Be the first!</p>
                         )}
                     </div>
 
@@ -226,7 +226,7 @@ const TaskDetails = () => {
                             value={newComment}
                             onChange={(e) => setNewComment(e.target.value)}
                             placeholder="Write a comment..."
-                            className="w-full dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 rounded-md p-2 text-sm text-gray-900 dark:text-zinc-200 resize-none focus:outline-none focus:ring-1 focus:ring-zinc-400"
+                            className="w-full dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-md p-2 text-sm text-zinc-900 dark:text-zinc-200 resize-none focus:outline-none focus:ring-1 focus:ring-zinc-400"
                             rows={3}
                         />
                         <button onClick={handleAddComment} className="bg-gradient-to-l from-zinc-600 to-zinc-700 hover:from-zinc-700 hover:to-zinc-800 transition-colors text-white text-sm px-5 py-2 rounded " >
@@ -237,10 +237,10 @@ const TaskDetails = () => {
             </div>
 
             <div className="w-full lg:w-1/2 flex flex-col gap-6">
-                <div className="p-5 rounded-md bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-800 ">
+                <div className="p-5 rounded-md bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-800 ">
                     <div className="mb-3">
                         <div className="flex items-start justify-between gap-2">
-                            <h1 className="text-lg font-medium text-gray-900 dark:text-zinc-100">{task.title}</h1>
+                            <h1 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">{task.title}</h1>
                             <div className="flex items-center gap-1">
                                 <button
                                     onClick={() => setShowFocusMode(true)}
@@ -295,12 +295,12 @@ const TaskDetails = () => {
                     </div>
 
                     {task.description && (
-                        <p className="text-sm text-gray-600 dark:text-zinc-400 leading-relaxed mb-4">{task.description}</p>
+                        <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-4">{task.description}</p>
                     )}
 
                     <hr className="border-zinc-200 dark:border-zinc-700 my-3" />
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-700 dark:text-zinc-300">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-zinc-700 dark:text-zinc-300">
                         <div className="flex items-center gap-2">
                             <div className="size-5 rounded-full bg-zinc-600 dark:bg-zinc-500 flex items-center justify-center text-white text-xs">
                                 {task.assignee?.name?.charAt(0)?.toUpperCase() || 'U'}
@@ -308,7 +308,7 @@ const TaskDetails = () => {
                             {task.assignee?.name || "Unassigned"}
                         </div>
                         <div className="flex items-center gap-2">
-                            <CalendarIcon className="size-4 text-gray-500 dark:text-zinc-500" />
+                            <CalendarIcon className="size-4 text-zinc-500 dark:text-zinc-500" />
                             Due : {task.dueDate ? format(new Date(task.dueDate), "dd MMM yyyy") : "-"}
                         </div>
                     </div>
@@ -337,11 +337,11 @@ const TaskDetails = () => {
                 </div>
 
                 {project && (
-                    <div className="p-4 rounded-md bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 border border-gray-300 dark:border-zinc-800 ">
+                    <div className="p-4 rounded-md bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-800 ">
                         <p className="text-xl font-medium mb-4">Project Details</p>
-                        <h2 className="text-gray-900 dark:text-zinc-100 flex items-center gap-2"> <PenIcon className="size-4" /> {project.name}</h2>
+                        <h2 className="text-zinc-900 dark:text-zinc-100 flex items-center gap-2"> <PenIcon className="size-4" /> {project.name}</h2>
                         <p className="text-xs mt-3">Project Start Date: {project.start_date ? format(new Date(project.start_date), "dd MMM yyyy") : "-"}</p>
-                        <div className="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-zinc-400 mt-3">
+                        <div className="flex flex-wrap gap-4 text-sm text-zinc-500 dark:text-zinc-400 mt-3">
                             <span>Status: {project.status}</span>
                             <span>Priority: {project.priority}</span>
                             <span>Progress: {project.progress}%</span>

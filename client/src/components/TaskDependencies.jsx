@@ -7,7 +7,7 @@ const DEPENDENCY_TYPES = {
   blocked_by: { label: 'Blocked by', color: 'text-red-500', bg: 'bg-red-100 dark:bg-red-900/20' },
   blocks: { label: 'Blocks', color: 'text-orange-500', bg: 'bg-orange-100 dark:bg-orange-900/20' },
   relates_to: { label: 'Related to', color: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-900/20' },
-  duplicates: { label: 'Duplicates', color: 'text-gray-500', bg: 'bg-gray-100 dark:bg-gray-900/20' },
+  duplicates: { label: 'Duplicates', color: 'text-zinc-500', bg: 'bg-zinc-100 dark:bg-zinc-900/20' },
 };
 
 const TaskDependencies = ({ taskId, projectTasks = [] }) => {
@@ -81,12 +81,12 @@ const TaskDependencies = ({ taskId, projectTasks = [] }) => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Link2 className="size-4 text-gray-500 dark:text-zinc-400" />
-          <h3 className="text-sm font-medium text-gray-900 dark:text-zinc-100">
+          <Link2 className="size-4 text-zinc-500 dark:text-zinc-400" />
+          <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
             Dependencies
           </h3>
           {dependencies.length > 0 && (
-            <span className="text-xs text-gray-500">({dependencies.length})</span>
+            <span className="text-xs text-zinc-500">({dependencies.length})</span>
           )}
         </div>
         <button
@@ -100,10 +100,10 @@ const TaskDependencies = ({ taskId, projectTasks = [] }) => {
 
       {loading ? (
         <div className="flex justify-center py-4">
-          <Loader2 className="size-5 animate-spin text-gray-400" />
+          <Loader2 className="size-5 animate-spin text-zinc-400" />
         </div>
       ) : dependencies.length === 0 ? (
-        <p className="text-xs text-gray-500 dark:text-zinc-500 text-center py-2">
+        <p className="text-xs text-zinc-500 dark:text-zinc-500 text-center py-2">
           No dependencies
         </p>
       ) : (
@@ -161,19 +161,19 @@ const TaskDependencies = ({ taskId, projectTasks = [] }) => {
       {showAddDialog && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-xl w-full max-w-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
               Add Dependency
             </h3>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                   Type
                 </label>
                 <select
                   value={selectedType}
                   onChange={(e) => setSelectedType(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white"
                 >
                   {Object.entries(DEPENDENCY_TYPES).map(([value, { label }]) => (
                     <option key={value} value={value}>{label}</option>
@@ -182,13 +182,13 @@ const TaskDependencies = ({ taskId, projectTasks = [] }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                   Task
                 </label>
                 <select
                   value={selectedTask}
                   onChange={(e) => setSelectedTask(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white"
                 >
                   <option value="">Select a task...</option>
                   {availableTasks.map(task => (
@@ -201,7 +201,7 @@ const TaskDependencies = ({ taskId, projectTasks = [] }) => {
             <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => setShowAddDialog(false)}
-                className="px-4 py-2 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg"
+                className="px-4 py-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg"
               >
                 Cancel
               </button>
@@ -225,18 +225,18 @@ const DependencyItem = ({ dependency, task, taskId, onRemove }) => {
   const typeConfig = DEPENDENCY_TYPES[dependency.type] || DEPENDENCY_TYPES.relates_to;
 
   return (
-    <div className="flex items-center justify-between p-2 bg-gray-50 dark:bg-zinc-800/50 rounded group">
+    <div className="flex items-center justify-between p-2 bg-zinc-50 dark:bg-zinc-800/50 rounded group">
       <div className="flex items-center gap-2 min-w-0">
         <span className={`text-xs px-2 py-0.5 rounded ${typeConfig.bg} ${typeConfig.color}`}>
           {task?.status}
         </span>
-        <span className="text-sm text-gray-900 dark:text-zinc-100 truncate">
+        <span className="text-sm text-zinc-900 dark:text-zinc-100 truncate">
           {task?.title}
         </span>
       </div>
       <button
         onClick={onRemove}
-        className="p-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
+        className="p-1 text-zinc-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
       >
         <X className="size-4" />
       </button>

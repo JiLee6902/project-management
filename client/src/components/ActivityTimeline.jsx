@@ -29,12 +29,12 @@ const activityIcons = {
   task_due_date_changed: { icon: Calendar, color: 'text-cyan-500', bg: 'bg-cyan-100 dark:bg-cyan-900/30' },
   comment_added: { icon: MessageSquare, color: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-900/30' },
   comment_updated: { icon: MessageSquare, color: 'text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30' },
-  comment_deleted: { icon: MessageSquare, color: 'text-gray-500', bg: 'bg-gray-100 dark:bg-gray-900/30' },
+  comment_deleted: { icon: MessageSquare, color: 'text-zinc-500', bg: 'bg-zinc-100 dark:bg-zinc-900/30' },
   subtask_added: { icon: ListChecks, color: 'text-teal-500', bg: 'bg-teal-100 dark:bg-teal-900/30' },
   subtask_completed: { icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-100 dark:bg-green-900/30' },
-  subtask_uncompleted: { icon: Circle, color: 'text-gray-500', bg: 'bg-gray-100 dark:bg-gray-900/30' },
+  subtask_uncompleted: { icon: Circle, color: 'text-zinc-500', bg: 'bg-zinc-100 dark:bg-zinc-900/30' },
   label_added: { icon: Tag, color: 'text-pink-500', bg: 'bg-pink-100 dark:bg-pink-900/30' },
-  label_removed: { icon: Tag, color: 'text-gray-500', bg: 'bg-gray-100 dark:bg-gray-900/30' },
+  label_removed: { icon: Tag, color: 'text-zinc-500', bg: 'bg-zinc-100 dark:bg-zinc-900/30' },
   project_created: { icon: FolderPlus, color: 'text-green-500', bg: 'bg-green-100 dark:bg-green-900/30' },
   project_updated: { icon: Edit, color: 'text-blue-500', bg: 'bg-blue-100 dark:bg-blue-900/30' },
   project_member_added: { icon: UserPlus, color: 'text-green-500', bg: 'bg-green-100 dark:bg-green-900/30' },
@@ -44,8 +44,8 @@ const activityIcons = {
 const ActivityItem = ({ activity }) => {
   const iconConfig = activityIcons[activity.type] || {
     icon: Activity,
-    color: 'text-gray-500',
-    bg: 'bg-gray-100 dark:bg-gray-900/30'
+    color: 'text-zinc-500',
+    bg: 'bg-zinc-100 dark:bg-zinc-900/30'
   };
   const IconComponent = iconConfig.icon;
 
@@ -56,10 +56,10 @@ const ActivityItem = ({ activity }) => {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
-          <p className="text-sm text-gray-900 dark:text-zinc-100">
+          <p className="text-sm text-zinc-900 dark:text-zinc-100">
             <span className="font-medium">{activity.user?.name || 'Unknown'}</span>
             {' '}
-            <span className="text-gray-600 dark:text-zinc-400">
+            <span className="text-zinc-600 dark:text-zinc-400">
               {activity.description}
             </span>
             {activity.metadata?.taskTitle && (
@@ -69,7 +69,7 @@ const ActivityItem = ({ activity }) => {
             )}
           </p>
         </div>
-        <p className="text-xs text-gray-500 dark:text-zinc-500 mt-0.5">
+        <p className="text-xs text-zinc-500 dark:text-zinc-500 mt-0.5">
           {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
         </p>
       </div>
@@ -147,7 +147,7 @@ const ActivityTimeline = ({ projectId, taskId, limit = 20, showHeader = true }) 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Loader2 className="size-6 animate-spin text-gray-400" />
+        <Loader2 className="size-6 animate-spin text-zinc-400" />
       </div>
     );
   }
@@ -158,12 +158,12 @@ const ActivityTimeline = ({ projectId, taskId, limit = 20, showHeader = true }) 
     <div className="space-y-2">
       {showHeader && (
         <div className="flex items-center gap-2 mb-4">
-          <Activity className="size-5 text-gray-500 dark:text-zinc-400" />
-          <h3 className="text-sm font-medium text-gray-900 dark:text-zinc-100">
+          <Activity className="size-5 text-zinc-500 dark:text-zinc-400" />
+          <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
             Activity
           </h3>
           {total > 0 && (
-            <span className="text-xs text-gray-500 dark:text-zinc-500">
+            <span className="text-xs text-zinc-500 dark:text-zinc-500">
               ({total})
             </span>
           )}
@@ -171,12 +171,12 @@ const ActivityTimeline = ({ projectId, taskId, limit = 20, showHeader = true }) 
       )}
 
       {activities.length === 0 ? (
-        <p className="text-sm text-gray-500 dark:text-zinc-500 py-4 text-center">
+        <p className="text-sm text-zinc-500 dark:text-zinc-500 py-4 text-center">
           No activity yet
         </p>
       ) : (
         <>
-          <div className="divide-y divide-gray-100 dark:divide-zinc-800">
+          <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {activities.map((activity) => (
               <ActivityItem key={activity.id} activity={activity} />
             ))}

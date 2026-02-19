@@ -14,11 +14,11 @@ const DeleteConfirmDialog = ({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div
-                className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/30 dark:bg-black/60 backdrop-blur-sm"
                 onClick={onClose}
             />
 
-            <div className="relative bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl animate-modal-enter w-full max-w-md mx-4 overflow-hidden">
                 <div className="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800">
                     <div className="flex items-center gap-3">
                         <div className="p-2 rounded-full bg-red-100 dark:bg-red-900/30">
@@ -55,7 +55,7 @@ const DeleteConfirmDialog = ({
                     <button
                         onClick={onClose}
                         disabled={isLoading}
-                        className="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors disabled:opacity-50"
+                        className="px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 active:scale-[0.97] transition-all duration-200 disabled:opacity-50"
                     >
                         Cancel
                     </button>

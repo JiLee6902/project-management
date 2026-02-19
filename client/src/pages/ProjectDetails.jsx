@@ -104,7 +104,7 @@ export default function ProjectDetail() {
                     <ExportButton projectId={project.id} projectName={project.name} />
                     <button
                         onClick={() => setShowCreateTask(true)}
-                        className="flex items-center gap-2 px-5 py-2 text-sm rounded bg-gradient-to-br from-zinc-600 to-zinc-700 hover:from-zinc-700 hover:to-zinc-800 text-white"
+                        className="flex items-center gap-2 px-5 py-2 text-sm bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-medium rounded-lg shadow-sm hover:shadow-md hover:bg-zinc-800 dark:hover:bg-zinc-100 active:scale-[0.97] transition-all duration-200"
                     >
                         <PlusIcon className="size-4" />
                         New Task
@@ -120,7 +120,7 @@ export default function ProjectDetail() {
                     { label: "In Progress", value: tasks.filter((t) => t.status === "IN_PROGRESS" || t.status === "TODO").length, color: "text-zinc-600 dark:text-zinc-400" },
                     { label: "Team Members", value: project.members?.length || 0, color: "text-zinc-700 dark:text-zinc-300" },
                 ].map((card, idx) => (
-                    <div key={idx} className=" dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-200 dark:border-zinc-800 flex justify-between sm:min-w-60 p-4 py-2.5 rounded">
+                    <div key={idx} className="bg-white dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-200/80 dark:border-zinc-800 shadow-sm dark:shadow-none hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-700 hover:-translate-y-0.5 flex justify-between sm:min-w-60 p-4 py-2.5 rounded-xl transition-all duration-300 ease-out">
                         <div>
                             <div className="text-sm text-zinc-600 dark:text-zinc-400">{card.label}</div>
                             <div className={`text-2xl font-bold ${card.color}`}>{card.value}</div>

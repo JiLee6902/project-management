@@ -16,11 +16,11 @@ const Dashboard = () => {
         <div className='max-w-6xl mx-auto'>
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 ">
                 <div>
-                    <h1 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-white mb-1"> Welcome back, {user?.name || 'User'} </h1>
-                    <p className="text-gray-500 dark:text-zinc-400 text-sm"> Here's what's happening with your projects today </p>
+                    <h1 className="text-xl sm:text-2xl font-semibold text-zinc-900 dark:text-white mb-1"> Welcome back, {user?.name || 'User'} </h1>
+                    <p className="text-zinc-500 dark:text-zinc-400 text-sm"> Here's what's happening with your projects today </p>
                 </div>
 
-                <button onClick={() => setIsDialogOpen(true)} className="flex items-center gap-2 px-5 py-2 text-sm rounded bg-gradient-to-br from-zinc-600 to-zinc-700 hover:from-zinc-700 hover:to-zinc-800 text-white space-x-2 transition" >
+                <button onClick={() => setIsDialogOpen(true)} className="flex items-center gap-2 px-5 py-2 text-sm bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-medium rounded-lg shadow-sm hover:shadow-md hover:bg-zinc-800 dark:hover:bg-zinc-100 active:scale-[0.97] transition-all duration-200" >
                     <Plus size={16} /> New Project
                 </button>
 

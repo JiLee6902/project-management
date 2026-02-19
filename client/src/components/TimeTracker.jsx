@@ -122,7 +122,7 @@ const TimeTracker = ({ taskId }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 text-gray-500 dark:text-zinc-400 text-sm">
+      <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 text-sm">
         <Loader2 className="size-4 animate-spin" />
         Loading time entries...
       </div>
@@ -132,18 +132,18 @@ const TimeTracker = ({ taskId }) => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-zinc-100 flex items-center gap-2">
+        <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
           <Clock className="size-4" />
           Time Tracking
         </h3>
-        <span className="text-xs text-gray-500 dark:text-zinc-500">
+        <span className="text-xs text-zinc-500 dark:text-zinc-500">
           Total: {formatDuration(totalTime)}
         </span>
       </div>
 
-      <div className="p-3 bg-gray-50 dark:bg-zinc-800 rounded-lg">
+      <div className="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg">
         <div className="flex items-center gap-3 mb-2">
-          <span className="font-mono text-lg text-gray-900 dark:text-zinc-100">
+          <span className="font-mono text-lg text-zinc-900 dark:text-zinc-100">
             {timerDisplay}
           </span>
           {activeTimer ? (
@@ -170,38 +170,38 @@ const TimeTracker = ({ taskId }) => {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="What are you working on?"
-            className="w-full text-sm bg-transparent border-b border-gray-300 dark:border-zinc-600 focus:outline-none focus:border-blue-500 text-gray-900 dark:text-zinc-100"
+            className="w-full text-sm bg-transparent border-b border-zinc-300 dark:border-zinc-600 focus:outline-none focus:border-blue-500 text-zinc-900 dark:text-zinc-100"
           />
         )}
       </div>
 
       {timeEntries.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs text-gray-500 dark:text-zinc-500 uppercase tracking-wide">
+          <p className="text-xs text-zinc-500 dark:text-zinc-500 uppercase tracking-wide">
             Recent entries
           </p>
           {timeEntries.slice(0, 5).map((entry) => (
             <div
               key={entry.id}
-              className="flex items-center justify-between p-2 bg-gray-50 dark:bg-zinc-800/50 rounded text-sm"
+              className="flex items-center justify-between p-2 bg-zinc-50 dark:bg-zinc-800/50 rounded text-sm"
             >
               <div className="flex-1">
-                <p className="text-gray-900 dark:text-zinc-100">
+                <p className="text-zinc-900 dark:text-zinc-100">
                   {entry.description || 'No description'}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-zinc-500">
+                <p className="text-xs text-zinc-500 dark:text-zinc-500">
                   {entry.startTime && format(new Date(entry.startTime), 'MMM d, HH:mm')}
                   {entry.endTime && ` - ${format(new Date(entry.endTime), 'HH:mm')}`}
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-gray-600 dark:text-zinc-400 font-mono">
+                <span className="text-zinc-600 dark:text-zinc-400 font-mono">
                   {formatDuration(entry.duration)}
                 </span>
                 {entry.endTime && (
                   <button
                     onClick={() => handleDeleteEntry(entry.id)}
-                    className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                    className="p-1 text-zinc-400 hover:text-red-500 transition-colors"
                   >
                     <Trash2 className="size-4" />
                   </button>

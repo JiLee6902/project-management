@@ -53,15 +53,15 @@ export default function Settings() {
         <div className="space-y-6 max-w-4xl mx-auto">
             {/* Header */}
             <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Settings</h1>
-                <p className="text-gray-500 dark:text-zinc-400">
+                <h1 className="text-3xl font-bold text-zinc-900 dark:text-white mb-2">Settings</h1>
+                <p className="text-zinc-500 dark:text-zinc-400">
                     Manage your account settings and preferences
                 </p>
             </div>
 
             {/* Tabs */}
             <div className="space-y-6">
-                <div className="inline-flex gap-2 bg-gray-100 dark:bg-zinc-950 dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-gray-300 dark:border-zinc-800 rounded-lg p-1">
+                <div className="inline-flex gap-2 bg-zinc-100 dark:bg-zinc-950 dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-200/80 dark:border-zinc-800 rounded-xl p-1">
                     {[
                         { key: "profile", icon: <UserIcon className="w-4 h-4" />, label: "Profile" },
                         { key: "account", icon: <Shield className="w-4 h-4" />, label: "Account" },
@@ -70,8 +70,8 @@ export default function Settings() {
                             key={tab.key}
                             onClick={() => setActiveTab(tab.key)}
                             className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm ${activeTab === tab.key
-                                    ? "bg-gray-300 dark:bg-zinc-800 text-gray-900 dark:text-white"
-                                    : "text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white"
+                                    ? "bg-zinc-300 dark:bg-zinc-800 text-zinc-900 dark:text-white"
+                                    : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white"
                                 }`}
                         >
                             {tab.icon}
@@ -82,38 +82,38 @@ export default function Settings() {
 
                 {/* Profile Tab */}
                 {activeTab === "profile" && (
-                    <div className="bg-gray-100 dark:bg-zinc-950 dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-gray-300 dark:border-zinc-800 rounded-lg p-6 space-y-6">
-                        <h2 className="text-gray-900 dark:text-white text-lg font-semibold mb-4">Profile Information</h2>
+                    <div className="bg-white dark:bg-zinc-950 dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-200/80 dark:border-zinc-800 shadow-sm dark:shadow-none rounded-xl p-6 space-y-6">
+                        <h2 className="text-zinc-900 dark:text-white text-lg font-semibold mb-4">Profile Information</h2>
                         <div className="flex items-center gap-6">
                             <div className="w-20 h-20 rounded-full bg-zinc-600 dark:bg-zinc-500 flex items-center justify-center text-white text-2xl font-medium">
                                 {user.name?.charAt(0)?.toUpperCase() || 'U'}
                             </div>
                             <div>
-                                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{user.name}</h3>
-                                <p className="text-gray-500 dark:text-zinc-400">{user?.email}</p>
+                                <h3 className="text-xl font-semibold text-zinc-900 dark:text-white">{user.name}</h3>
+                                <p className="text-zinc-500 dark:text-zinc-400">{user?.email}</p>
                             </div>
                         </div>
 
                         <form onSubmit={handleUpdateProfile} className="space-y-4">
                             <div className="space-y-2">
-                                <label htmlFor="fullName" className="block text-sm text-gray-700 dark:text-zinc-300">Full Name</label>
+                                <label htmlFor="fullName" className="block text-sm text-zinc-700 dark:text-zinc-300">Full Name</label>
                                 <input
                                     id="fullName"
                                     value={profileData.name}
                                     onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                                    className="w-full sm:max-w-md p-2 rounded-md bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 text-gray-900 dark:text-white"
+                                    className="w-full sm:max-w-md p-2 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-zinc-100/10 focus:border-zinc-400 transition-all duration-200"
                                 />
                             </div>
 
                             <div className="space-y-2">
-                                <label htmlFor="email" className="block text-sm text-gray-700 dark:text-zinc-300">Email Address</label>
+                                <label htmlFor="email" className="block text-sm text-zinc-700 dark:text-zinc-300">Email Address</label>
                                 <input
                                     id="email"
                                     value={user.email}
                                     disabled
-                                    className="w-full p-2 rounded-md bg-gray-200 dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 text-gray-500 dark:text-zinc-400"
+                                    className="w-full p-2 rounded-lg bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400"
                                 />
-                                <p className="text-xs text-gray-500 dark:text-zinc-400">
+                                <p className="text-xs text-zinc-500 dark:text-zinc-400">
                                     Email cannot be changed. Contact support if you need to update it.
                                 </p>
                             </div>
@@ -122,7 +122,7 @@ export default function Settings() {
                                 <button
                                     type="submit"
                                     disabled={isUpdating}
-                                    className="flex items-center text-sm gap-2 px-5 py-2 rounded bg-gradient-to-br from-zinc-600 to-zinc-700 hover:from-zinc-700 hover:to-zinc-800 text-white disabled:opacity-50"
+                                    className="flex items-center text-sm gap-2 px-5 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-medium rounded-lg shadow-sm hover:shadow-md hover:bg-zinc-800 dark:hover:bg-zinc-100 active:scale-[0.97] transition-all duration-200 disabled:opacity-50"
                                 >
                                     <Save className="w-4 h-4" />
                                     {isUpdating ? "Saving..." : "Save Changes"}
@@ -134,18 +134,18 @@ export default function Settings() {
 
                 {/* Account Tab */}
                 {activeTab === "account" && (
-                    <div className="bg-gray-100 dark:bg-zinc-950 dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-gray-300 dark:border-zinc-800 rounded-lg p-6 space-y-6">
-                        <h2 className="text-gray-900 dark:text-white text-lg font-semibold mb-4">Account Settings</h2>
+                    <div className="bg-white dark:bg-zinc-950 dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-200/80 dark:border-zinc-800 shadow-sm dark:shadow-none rounded-xl p-6 space-y-6">
+                        <h2 className="text-zinc-900 dark:text-white text-lg font-semibold mb-4">Account Settings</h2>
                         <div className="p-4 bg-white dark:bg-zinc-900 rounded-lg">
-                            <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Account Type</h4>
-                            <p className="text-gray-500 dark:text-zinc-400 text-sm mb-3">
+                            <h4 className="font-semibold text-zinc-900 dark:text-white mb-2">Account Type</h4>
+                            <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-3">
                                 Standard user account
                             </p>
                         </div>
 
                         <div className="p-4 bg-zinc-100 dark:bg-zinc-800/50 border border-zinc-300 dark:border-zinc-700 rounded-lg">
                             <h4 className="font-semibold text-zinc-700 dark:text-zinc-300 mb-2">Sign Out</h4>
-                            <p className="text-gray-500 dark:text-zinc-400 text-sm mb-4">
+                            <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-4">
                                 Log out of your account
                             </p>
                             <button
@@ -162,8 +162,8 @@ export default function Settings() {
 
             {/* Logout Confirmation Modal */}
             {showLogoutConfirm && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 w-full max-w-sm mx-4">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 dark:bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl animate-modal-enter p-6 w-full max-w-sm mx-4">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="p-2 rounded-full bg-amber-100 dark:bg-amber-900/30">
                                 <AlertTriangle className="size-5 text-amber-600 dark:text-amber-400" />
@@ -178,7 +178,7 @@ export default function Settings() {
                                 type="button"
                                 onClick={() => setShowLogoutConfirm(false)}
                                 disabled={isLoggingOut}
-                                className="px-4 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 disabled:opacity-50"
+                                className="px-4 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 active:scale-[0.97] transition-all duration-200 disabled:opacity-50"
                             >
                                 Cancel
                             </button>
@@ -186,7 +186,7 @@ export default function Settings() {
                                 type="button"
                                 onClick={handleLogout}
                                 disabled={isLoggingOut}
-                                className="px-4 py-2 text-sm bg-zinc-800 hover:bg-zinc-900 dark:bg-zinc-700 dark:hover:bg-zinc-600 text-white rounded-lg disabled:opacity-50 flex items-center gap-2"
+                                className="px-4 py-2 text-sm bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-medium rounded-lg shadow-sm hover:shadow-md hover:bg-zinc-800 dark:hover:bg-zinc-100 active:scale-[0.97] transition-all duration-200 disabled:opacity-50 flex items-center gap-2"
                             >
                                 <LogOut className="size-4" />
                                 {isLoggingOut ? "Signing out..." : "Sign Out"}

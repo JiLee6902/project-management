@@ -31,9 +31,9 @@ const QUADRANTS = {
     title: 'Eliminate',
     subtitle: 'Not Urgent, Not Important',
     icon: Inbox,
-    color: 'border-gray-400',
-    bg: 'bg-gray-50 dark:bg-zinc-800/50',
-    iconColor: 'text-gray-400',
+    color: 'border-zinc-400',
+    bg: 'bg-zinc-50 dark:bg-zinc-800/50',
+    iconColor: 'text-zinc-400',
   },
 };
 
@@ -72,10 +72,10 @@ const PriorityMatrix = ({ tasks = [], projectId }) => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+        <h3 className="text-lg font-semibold text-zinc-900 dark:text-white flex items-center gap-2">
           <Target className="size-5" /> Priority Matrix (Eisenhower)
         </h3>
-        <p className="text-xs text-gray-500 dark:text-zinc-400">
+        <p className="text-xs text-zinc-500 dark:text-zinc-400">
           Tasks due within 3 days = Urgent | High/Critical priority = Important
         </p>
       </div>
@@ -93,10 +93,10 @@ const PriorityMatrix = ({ tasks = [], projectId }) => {
               <div className="flex items-center gap-2 mb-3">
                 <Icon className={`size-5 ${config.iconColor}`} />
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white">
+                  <h4 className="font-medium text-zinc-900 dark:text-white">
                     {config.title}
                   </h4>
-                  <p className="text-xs text-gray-500 dark:text-zinc-400">
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
                     {config.subtitle}
                   </p>
                 </div>
@@ -107,7 +107,7 @@ const PriorityMatrix = ({ tasks = [], projectId }) => {
 
               <div className="space-y-2 max-h-[300px] overflow-y-auto">
                 {quadrantTasks.length === 0 ? (
-                  <p className="text-sm text-gray-400 dark:text-zinc-500 text-center py-4">
+                  <p className="text-sm text-zinc-400 dark:text-zinc-500 text-center py-4">
                     No tasks
                   </p>
                 ) : (
@@ -115,9 +115,9 @@ const PriorityMatrix = ({ tasks = [], projectId }) => {
                     <Link
                       key={task.id}
                       to={`/taskDetails?projectId=${projectId || task.projectId}&taskId=${task.id}`}
-                      className="block p-2 bg-white dark:bg-zinc-900 rounded border border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600 transition"
+                      className="block p-2 bg-white dark:bg-zinc-900 rounded border border-zinc-200 dark:border-zinc-700 hover:border-zinc-300 dark:hover:border-zinc-600 transition"
                     >
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                      <p className="text-sm font-medium text-zinc-900 dark:text-white truncate">
                         {task.title}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
@@ -126,12 +126,12 @@ const PriorityMatrix = ({ tasks = [], projectId }) => {
                             ? 'bg-red-100 dark:bg-red-900/30 text-red-600'
                             : task.priority === 'MEDIUM'
                             ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-600'
+                            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600'
                         }`}>
                           {task.priority}
                         </span>
                         {task.dueDate && (
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-zinc-500">
                             Due: {new Date(task.dueDate).toLocaleDateString()}
                           </span>
                         )}

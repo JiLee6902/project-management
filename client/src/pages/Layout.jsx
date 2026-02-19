@@ -90,8 +90,8 @@ const Layout = () => {
         return (
             <div className="min-h-screen flex flex-col justify-center items-center bg-white dark:bg-zinc-950">
                 <div className="text-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Welcome to Project Management</h2>
-                    <p className="text-gray-500 dark:text-zinc-400">Create your first workspace to get started</p>
+                    <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Welcome to Project Management</h2>
+                    <p className="text-zinc-500 dark:text-zinc-400">Create your first workspace to get started</p>
                 </div>
                 <button
                     onClick={() => setShowCreateWorkspace(true)}
@@ -106,7 +106,7 @@ const Layout = () => {
 
     return (
         <>
-            <div className="flex bg-white dark:bg-zinc-950 text-gray-900 dark:text-slate-100">
+            <div className="flex bg-white dark:bg-zinc-950 text-zinc-900 dark:text-slate-100">
                 <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
                 <div className="flex-1 flex flex-col h-screen">
                     <Navbar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />

@@ -104,9 +104,9 @@ export default function ProjectSettings({ project }) {
         }
     }, [project]);
 
-    const inputClasses = "w-full px-3 py-2 rounded mt-2 border text-sm dark:bg-zinc-900 border-zinc-300 dark:border-zinc-700 text-zinc-900 dark:text-zinc-300";
+    const inputClasses = "w-full px-3 py-2 rounded-lg mt-2 border text-sm bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-zinc-100/10 focus:border-zinc-400 transition-all duration-200";
 
-    const cardClasses = "rounded-lg border p-6 not-dark:bg-white dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border-zinc-300 dark:border-zinc-800";
+    const cardClasses = "rounded-xl border p-6 not-dark:bg-white dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border-zinc-200/80 dark:border-zinc-800 shadow-sm dark:shadow-none";
 
     const labelClasses = "text-sm text-zinc-600 dark:text-zinc-400";
 
@@ -189,7 +189,7 @@ export default function ProjectSettings({ project }) {
                     </div>
 
                     {/* Save Button */}
-                    <button type="submit" disabled={isSubmitting} className="ml-auto flex items-center text-sm justify-center gap-2 bg-gradient-to-br from-zinc-600 to-zinc-700 hover:from-zinc-700 hover:to-zinc-800 text-white px-4 py-2 rounded disabled:opacity-50" >
+                    <button type="submit" disabled={isSubmitting} className="ml-auto flex items-center text-sm justify-center gap-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-medium px-4 py-2 rounded-lg shadow-sm hover:shadow-md hover:bg-zinc-800 dark:hover:bg-zinc-100 active:scale-[0.97] transition-all duration-200 disabled:opacity-50" >
                         <Save className="size-4" /> {isSubmitting ? "Saving..." : "Save Changes"}
                     </button>
                 </form>
@@ -245,8 +245,8 @@ export default function ProjectSettings({ project }) {
 
             {/* Delete Confirmation Modal */}
             {showDeleteConfirm && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 w-full max-w-md">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 dark:bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl animate-modal-enter p-6 w-full max-w-md">
                         <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-2">Delete Project</h3>
                         <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
                             This action cannot be undone. Please type <strong className="text-zinc-900 dark:text-white">{project.name}</strong> to confirm.
@@ -265,7 +265,7 @@ export default function ProjectSettings({ project }) {
                                     setShowDeleteConfirm(false);
                                     setDeleteConfirmText("");
                                 }}
-                                className="px-4 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
+                                className="px-4 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 active:scale-[0.97] transition-all duration-200"
                             >
                                 Cancel
                             </button>

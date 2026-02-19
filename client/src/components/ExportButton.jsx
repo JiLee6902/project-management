@@ -57,17 +57,17 @@ const ExportButton = ({ projectId, projectName }) => {
             className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-700 z-20 overflow-hidden">
+          <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-zinc-200 dark:border-zinc-700 z-20 overflow-hidden">
             <button
               onClick={handleExportCsv}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
             >
               <FileSpreadsheet className="size-4 text-green-500" />
               Export as CSV
             </button>
             <button
               onClick={handleExportJson}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 dark:text-zinc-200 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
             >
               <FileJson className="size-4 text-blue-500" />
               Export as JSON

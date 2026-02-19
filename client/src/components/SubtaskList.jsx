@@ -122,7 +122,7 @@ const SubtaskList = ({ taskId }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 text-gray-500 dark:text-zinc-400 text-sm">
+      <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 text-sm">
         <Loader2 className="size-4 animate-spin" />
         Loading subtasks...
       </div>
@@ -133,11 +133,11 @@ const SubtaskList = ({ taskId }) => {
     <div className="space-y-3">
       {/* Header with progress */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-zinc-100 flex items-center gap-2">
+        <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
           <CheckSquare className="size-4" />
           Checklist
           {totalCount > 0 && (
-            <span className="text-xs text-gray-500 dark:text-zinc-400">
+            <span className="text-xs text-zinc-500 dark:text-zinc-400">
               ({completedCount}/{totalCount})
             </span>
           )}
@@ -146,7 +146,7 @@ const SubtaskList = ({ taskId }) => {
 
       {/* Progress bar */}
       {totalCount > 0 && (
-        <div className="w-full h-1.5 bg-gray-200 dark:bg-zinc-700 rounded-full overflow-hidden">
+        <div className="w-full h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
           <div
             className="h-full bg-green-500 transition-all duration-300"
             style={{ width: `${progressPercent}%` }}
@@ -159,10 +159,10 @@ const SubtaskList = ({ taskId }) => {
         {subtasks.map((subtask) => (
           <div
             key={subtask.id}
-            className="group flex items-center gap-2 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+            className="group flex items-center gap-2 p-2 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
           >
             {/* Drag handle (visual only for now) */}
-            <GripVertical className="size-4 text-gray-400 dark:text-zinc-600 opacity-0 group-hover:opacity-100 cursor-grab" />
+            <GripVertical className="size-4 text-zinc-400 dark:text-zinc-600 opacity-0 group-hover:opacity-100 cursor-grab" />
 
             {/* Checkbox */}
             <button
@@ -172,7 +172,7 @@ const SubtaskList = ({ taskId }) => {
               {subtask.completed ? (
                 <CheckSquare className="size-5 text-green-500" />
               ) : (
-                <Square className="size-5 text-gray-400 dark:text-zinc-500" />
+                <Square className="size-5 text-zinc-400 dark:text-zinc-500" />
               )}
             </button>
 
@@ -185,15 +185,15 @@ const SubtaskList = ({ taskId }) => {
                 onBlur={handleSaveEdit}
                 onKeyDown={handleKeyDown}
                 autoFocus
-                className="flex-1 text-sm bg-transparent border-b border-zinc-400 dark:border-zinc-600 focus:outline-none focus:border-blue-500 text-gray-900 dark:text-zinc-100"
+                className="flex-1 text-sm bg-transparent border-b border-zinc-400 dark:border-zinc-600 focus:outline-none focus:border-blue-500 text-zinc-900 dark:text-zinc-100"
               />
             ) : (
               <span
                 onClick={() => handleStartEdit(subtask)}
                 className={`flex-1 text-sm cursor-pointer ${
                   subtask.completed
-                    ? 'line-through text-gray-400 dark:text-zinc-500'
-                    : 'text-gray-900 dark:text-zinc-100'
+                    ? 'line-through text-zinc-400 dark:text-zinc-500'
+                    : 'text-zinc-900 dark:text-zinc-100'
                 }`}
               >
                 {subtask.title}
@@ -203,7 +203,7 @@ const SubtaskList = ({ taskId }) => {
             {/* Delete button */}
             <button
               onClick={() => handleDelete(subtask.id)}
-              className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 transition-all"
+              className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-zinc-400 hover:text-red-500 transition-all"
             >
               <Trash2 className="size-4" />
             </button>
@@ -213,17 +213,17 @@ const SubtaskList = ({ taskId }) => {
 
       {/* Add new subtask */}
       <form onSubmit={handleAddSubtask} className="flex items-center gap-2">
-        <Plus className="size-5 text-gray-400 dark:text-zinc-500" />
+        <Plus className="size-5 text-zinc-400 dark:text-zinc-500" />
         <input
           type="text"
           value={newSubtaskTitle}
           onChange={(e) => setNewSubtaskTitle(e.target.value)}
           placeholder="Add a subtask..."
-          className="flex-1 text-sm bg-transparent border-b border-transparent focus:border-zinc-400 dark:focus:border-zinc-600 focus:outline-none text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500"
+          className="flex-1 text-sm bg-transparent border-b border-transparent focus:border-zinc-400 dark:focus:border-zinc-600 focus:outline-none text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500"
           disabled={addingSubtask}
         />
         {addingSubtask && (
-          <Loader2 className="size-4 animate-spin text-gray-400" />
+          <Loader2 className="size-4 animate-spin text-zinc-400" />
         )}
       </form>
     </div>

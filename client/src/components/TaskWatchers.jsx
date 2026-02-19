@@ -57,7 +57,7 @@ const TaskWatchers = ({ taskId }) => {
         className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg transition ${
           isWatching
             ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-            : 'bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-400 hover:bg-gray-200 dark:hover:bg-zinc-700'
+            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
         }`}
       >
         {toggling ? (
@@ -72,7 +72,7 @@ const TaskWatchers = ({ taskId }) => {
 
       {watchers.length > 0 && (
         <div className="flex items-center gap-1">
-          <Users className="size-4 text-gray-400" />
+          <Users className="size-4 text-zinc-400" />
           <div className="flex -space-x-2">
             {watchers.slice(0, 5).map((watcher) => (
               <div
@@ -84,7 +84,7 @@ const TaskWatchers = ({ taskId }) => {
               </div>
             ))}
             {watchers.length > 5 && (
-              <div className="w-7 h-7 rounded-full bg-gray-300 dark:bg-zinc-600 flex items-center justify-center text-gray-600 dark:text-zinc-300 text-xs font-medium border-2 border-white dark:border-zinc-900">
+              <div className="w-7 h-7 rounded-full bg-zinc-300 dark:bg-zinc-600 flex items-center justify-center text-zinc-600 dark:text-zinc-300 text-xs font-medium border-2 border-white dark:border-zinc-900">
                 +{watchers.length - 5}
               </div>
             )}

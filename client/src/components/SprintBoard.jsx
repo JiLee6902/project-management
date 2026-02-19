@@ -134,7 +134,7 @@ const SprintBoard = ({ projectId }) => {
         </h2>
         <button
           onClick={() => setShowCreateDialog(true)}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm bg-zinc-800 dark:bg-zinc-700 text-white rounded-lg hover:bg-zinc-700 dark:hover:bg-zinc-600"
+          className="flex items-center gap-2 px-3 py-1.5 text-sm bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-medium rounded-lg shadow-sm hover:shadow-md hover:bg-zinc-800 dark:hover:bg-zinc-100 active:scale-[0.97] transition-all duration-200"
         >
           <Plus className="size-4" /> New Sprint
         </button>
@@ -262,8 +262,8 @@ const SprintBoard = ({ projectId }) => {
 
       {/* Create Sprint Dialog */}
       {showCreateDialog && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6 w-full max-w-md mx-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 dark:bg-black/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl animate-modal-enter p-6 w-full max-w-md mx-4">
             <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
               Create New Sprint
             </h3>
@@ -324,13 +324,13 @@ const SprintBoard = ({ projectId }) => {
             <div className="flex justify-end gap-3 mt-6">
               <button
                 onClick={() => setShowCreateDialog(false)}
-                className="px-4 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
+                className="px-4 py-2 text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 active:scale-[0.97] transition-all duration-200"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateSprint}
-                className="px-4 py-2 text-sm bg-zinc-800 dark:bg-zinc-700 text-white rounded-lg hover:bg-zinc-700 dark:hover:bg-zinc-600"
+                className="px-4 py-2 text-sm bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-medium rounded-lg shadow-sm hover:shadow-md hover:bg-zinc-800 dark:hover:bg-zinc-100 active:scale-[0.97] transition-all duration-200"
               >
                 Create Sprint
               </button>

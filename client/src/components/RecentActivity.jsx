@@ -34,7 +34,7 @@ const RecentActivity = () => {
     }, [currentWorkspace]);
 
     return (
-        <div className="bg-white dark:bg-zinc-950 dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 rounded-lg transition-all overflow-hidden">
+        <div className="bg-white dark:bg-zinc-950 dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-200/80 dark:border-zinc-800 shadow-sm dark:shadow-none hover:shadow-md hover:border-zinc-300 dark:hover:border-zinc-700 hover:-translate-y-0.5 rounded-xl transition-all duration-300 ease-out overflow-hidden">
             <div className="border-b border-zinc-200 dark:border-zinc-800 p-4">
                 <h2 className="text-lg text-zinc-800 dark:text-zinc-200">Recent Activity</h2>
             </div>
@@ -42,7 +42,7 @@ const RecentActivity = () => {
             <div className="p-0">
                 {tasks.length === 0 ? (
                     <div className="p-12 text-center">
-                        <div className="w-16 h-16 mx-auto mb-4 bg-zinc-200 dark:bg-zinc-800 rounded-full flex items-center justify-center">
+                        <div className="w-20 h-20 mx-auto mb-4 bg-zinc-100 dark:bg-zinc-800 rounded-2xl shadow-sm flex items-center justify-center">
                             <Clock className="w-8 h-8 text-zinc-600 dark:text-zinc-500" />
                         </div>
                         <p className="text-zinc-600 dark:text-zinc-400">No recent activity</p>
@@ -51,7 +51,7 @@ const RecentActivity = () => {
                     <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
                         {tasks.map((task) => {
                             const TypeIcon = typeIcons[task.type]?.icon || Square;
-                            const iconColor = typeIcons[task.type]?.color || "text-gray-500 dark:text-gray-400";
+                            const iconColor = typeIcons[task.type]?.color || "text-zinc-500 dark:text-zinc-400";
 
                             return (
                                 <div key={task.id} className="p-6 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">

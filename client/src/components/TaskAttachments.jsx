@@ -132,12 +132,12 @@ const TaskAttachments = ({ taskId, projectId }) => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Paperclip className="size-4 text-gray-500 dark:text-zinc-400" />
-          <h3 className="text-sm font-medium text-gray-900 dark:text-zinc-100">
+          <Paperclip className="size-4 text-zinc-500 dark:text-zinc-400" />
+          <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
             Attachments
           </h3>
           {attachments.length > 0 && (
-            <span className="text-xs text-gray-500 dark:text-zinc-500">
+            <span className="text-xs text-zinc-500 dark:text-zinc-500">
               ({attachments.length})
             </span>
           )}
@@ -165,7 +165,7 @@ const TaskAttachments = ({ taskId, projectId }) => {
         className={`border-2 border-dashed rounded-lg p-4 text-center transition ${
           dragActive
             ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-            : 'border-gray-300 dark:border-zinc-700 hover:border-gray-400 dark:hover:border-zinc-600'
+            : 'border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600'
         }`}
       >
         <input
@@ -175,8 +175,8 @@ const TaskAttachments = ({ taskId, projectId }) => {
           onChange={handleFileInputChange}
           className="hidden"
         />
-        <Upload className="size-8 mx-auto text-gray-400 dark:text-zinc-500 mb-2" />
-        <p className="text-sm text-gray-600 dark:text-zinc-400">
+        <Upload className="size-8 mx-auto text-zinc-400 dark:text-zinc-500 mb-2" />
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
           Drag & drop files here or{' '}
           <button
             onClick={() => fileInputRef.current?.click()}
@@ -185,7 +185,7 @@ const TaskAttachments = ({ taskId, projectId }) => {
             browse
           </button>
         </p>
-        <p className="text-xs text-gray-400 dark:text-zinc-600 mt-1">
+        <p className="text-xs text-zinc-400 dark:text-zinc-600 mt-1">
           Max 10MB per file
         </p>
       </div>
@@ -193,10 +193,10 @@ const TaskAttachments = ({ taskId, projectId }) => {
       {/* Attachments List */}
       {loading ? (
         <div className="flex justify-center py-4">
-          <Loader2 className="size-6 animate-spin text-gray-400" />
+          <Loader2 className="size-6 animate-spin text-zinc-400" />
         </div>
       ) : attachments.length === 0 ? (
-        <p className="text-sm text-gray-500 dark:text-zinc-500 text-center py-2">
+        <p className="text-sm text-zinc-500 dark:text-zinc-500 text-center py-2">
           No attachments yet
         </p>
       ) : (
@@ -204,14 +204,14 @@ const TaskAttachments = ({ taskId, projectId }) => {
           {attachments.map((attachment) => (
             <div
               key={attachment.id}
-              className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-zinc-800/50 rounded-lg group"
+              className="flex items-center gap-3 p-3 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg group"
             >
               {/* Thumbnail or Icon */}
               <div className="flex-shrink-0">
                 {isImage(attachment.mimeType) ? (
                   <button
                     onClick={() => setPreviewImage(attachment)}
-                    className="w-12 h-12 rounded-lg overflow-hidden bg-gray-200 dark:bg-zinc-700 hover:opacity-80 transition"
+                    className="w-12 h-12 rounded-lg overflow-hidden bg-zinc-200 dark:bg-zinc-700 hover:opacity-80 transition"
                   >
                     <img
                       src={attachment.url}
@@ -220,18 +220,18 @@ const TaskAttachments = ({ taskId, projectId }) => {
                     />
                   </button>
                 ) : (
-                  <div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-zinc-700 flex items-center justify-center">
-                    <FileIcon mimeType={attachment.mimeType} className="size-6 text-gray-500 dark:text-zinc-400" />
+                  <div className="w-12 h-12 rounded-lg bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center">
+                    <FileIcon mimeType={attachment.mimeType} className="size-6 text-zinc-500 dark:text-zinc-400" />
                   </div>
                 )}
               </div>
 
               {/* File Info */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-zinc-100 truncate">
+                <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">
                   {attachment.originalName}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-zinc-500">
+                <p className="text-xs text-zinc-500 dark:text-zinc-500">
                   {attachmentService.formatFileSize(attachment.size)} •{' '}
                   {attachment.uploader?.name || 'Unknown'} •{' '}
                   {format(new Date(attachment.createdAt), 'MMM d, yyyy')}
@@ -243,7 +243,7 @@ const TaskAttachments = ({ taskId, projectId }) => {
                 {isImage(attachment.mimeType) && (
                   <button
                     onClick={() => setPreviewImage(attachment)}
-                    className="p-2 text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-gray-200 dark:hover:bg-zinc-700 rounded-lg"
+                    className="p-2 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg"
                     title="Preview"
                   >
                     <Eye className="size-4" />
@@ -254,14 +254,14 @@ const TaskAttachments = ({ taskId, projectId }) => {
                   download={attachment.originalName}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-gray-200 dark:hover:bg-zinc-700 rounded-lg"
+                  className="p-2 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg"
                   title="Download"
                 >
                   <Download className="size-4" />
                 </a>
                 <button
                   onClick={() => handleDelete(attachment)}
-                  className="p-2 text-gray-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 hover:bg-gray-200 dark:hover:bg-zinc-700 rounded-lg"
+                  className="p-2 text-zinc-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg"
                   title="Delete"
                 >
                   <Trash2 className="size-4" />

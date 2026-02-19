@@ -65,7 +65,7 @@ const SearchDropdown = () => {
 
     return (
         <div className="relative flex-1 max-w-sm" ref={dropdownRef}>
-            <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-400 size-3.5" />
+            <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 dark:text-zinc-400 size-3.5" />
             <input
                 ref={inputRef}
                 type="text"
@@ -76,7 +76,7 @@ const SearchDropdown = () => {
                 }}
                 onFocus={() => setIsOpen(true)}
                 placeholder="Search projects, tasks..."
-                className="pl-8 pr-8 py-2 w-full bg-white dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 rounded-md text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 focus:border-zinc-400 transition"
+                className="pl-8 pr-8 py-2 w-full bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-md text-sm text-zinc-900 dark:text-white placeholder-zinc-400 dark:placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-zinc-400 focus:border-zinc-400 transition"
             />
             {query ? (
                 <button
@@ -85,7 +85,7 @@ const SearchDropdown = () => {
                         setResults({ tasks: [], projects: [] });
                         inputRef.current?.focus();
                     }}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
                 >
                     <X className="size-3.5" />
                 </button>
@@ -97,7 +97,7 @@ const SearchDropdown = () => {
             )}
 
             {isOpen && query.length >= 2 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
                     {loading ? (
                         <div className="p-4 flex items-center justify-center text-zinc-500">
                             <Loader2 className="size-4 animate-spin mr-2" />

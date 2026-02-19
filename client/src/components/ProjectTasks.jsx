@@ -162,7 +162,7 @@ const ProjectTasks = ({ tasks = [] }) => {
                             key={name}
                             name={name}
                             onChange={handleFilterChange}
-                            className=" border not-dark:bg-white border-zinc-300 dark:border-zinc-800 outline-none px-3 py-1 rounded text-sm text-zinc-900 dark:text-zinc-200"
+                            className="border not-dark:bg-white border-zinc-200 dark:border-zinc-800 outline-none px-3 py-1 rounded-lg text-sm text-zinc-900 dark:text-zinc-200 focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-zinc-100/10 focus:border-zinc-400 transition-all duration-200"
                         >
                             {options[name].map((opt, idx) => (
                                 <option key={idx} value={opt.value}>{opt.label}</option>
@@ -176,7 +176,7 @@ const ProjectTasks = ({ tasks = [] }) => {
                     <button
                         type="button"
                         onClick={() => setFilters({ status: "", type: "", priority: "", assignee: "" })}
-                        className="px-3 py-1 flex items-center gap-2 rounded bg-gradient-to-br from-zinc-500 to-zinc-600 text-white text-sm transition-colors hover:from-zinc-600 hover:to-zinc-700"
+                        className="px-3 py-1 flex items-center gap-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-medium text-sm rounded-lg shadow-sm hover:shadow-md hover:bg-zinc-800 dark:hover:bg-zinc-100 active:scale-[0.97] transition-all duration-200"
                     >
                         <XIcon className="size-3" /> Reset
                     </button>
@@ -192,12 +192,12 @@ const ProjectTasks = ({ tasks = [] }) => {
             {view === "board" ? (
                 <KanbanBoard tasks={filteredTasks} />
             ) : (
-            <div className="overflow-auto rounded-lg lg:border border-zinc-300 dark:border-zinc-800">
+            <div className="overflow-auto rounded-xl lg:border border-zinc-200 dark:border-zinc-800 shadow-sm dark:shadow-none">
                 <div className="w-full">
                     {/* Desktop/Table View */}
                     <div className="hidden lg:block overflow-x-auto">
                         <table className="min-w-full text-sm text-left not-dark:bg-white text-zinc-900 dark:text-zinc-300">
-                            <thead className="text-xs uppercase dark:bg-zinc-800/70 text-zinc-500 dark:text-zinc-400 ">
+                            <thead className="text-xs uppercase bg-zinc-50 dark:bg-zinc-800/70 text-zinc-500 dark:text-zinc-400 ">
                                 <tr>
                                     <th className="pl-2 pr-1">
                                         <input
@@ -226,7 +226,7 @@ const ProjectTasks = ({ tasks = [] }) => {
                                             <tr
                                                 key={task.id}
                                                 onClick={() => navigate(`/taskDetails?projectId=${task.projectId}&taskId=${task.id}`)}
-                                                className=" border-t border-zinc-300 dark:border-zinc-800 group hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all cursor-pointer"
+                                                className=" border-t border-zinc-200 dark:border-zinc-800 group hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all cursor-pointer"
                                             >
                                                 <td onClick={e => e.stopPropagation()} className="pl-2 pr-1">
                                                     <input
@@ -344,7 +344,7 @@ const ProjectTasks = ({ tasks = [] }) => {
                                 const { background, prioritycolor } = priorityTexts[task.priority] || {};
 
                                 return (
-                                    <div key={task.id} className=" dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-300 dark:border-zinc-800 rounded-lg p-4 flex flex-col gap-2">
+                                    <div key={task.id} className=" dark:bg-gradient-to-br dark:from-zinc-800/70 dark:to-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-lg p-4 flex flex-col gap-2">
                                         <div className="flex items-center justify-between">
                                             <h3 className="text-zinc-900 dark:text-zinc-200 text-sm font-semibold">{task.title}</h3>
                                             <div className="flex items-center gap-2">

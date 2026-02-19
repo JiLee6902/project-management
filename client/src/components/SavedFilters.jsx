@@ -150,7 +150,7 @@ const SavedFilters = ({
           className={`flex items-center gap-2 px-3 py-2 text-sm rounded-lg border transition ${
             activeFilter || activeFilterCount > 0
               ? 'border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
-              : 'border-gray-300 dark:border-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-700 dark:text-zinc-300'
+              : 'border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300'
           }`}
         >
           <Filter className="size-4" />
@@ -180,7 +180,7 @@ const SavedFilters = ({
         {(activeFilter || activeFilterCount > 0) && (
           <button
             onClick={handleClearFilter}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-500 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition"
+            className="flex items-center gap-1.5 px-3 py-2 text-sm text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition"
           >
             <X className="size-4" />
             Clear
@@ -190,19 +190,19 @@ const SavedFilters = ({
 
       {/* Dropdown */}
       {showDropdown && (
-        <div className="absolute z-20 mt-2 w-72 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 rounded-lg shadow-lg">
-          <div className="p-2 border-b border-gray-200 dark:border-zinc-700">
-            <h4 className="text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase tracking-wider">
+        <div className="absolute z-20 mt-2 w-72 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg">
+          <div className="p-2 border-b border-zinc-200 dark:border-zinc-700">
+            <h4 className="text-xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
               Saved Filters
             </h4>
           </div>
 
           {loading ? (
             <div className="flex justify-center py-6">
-              <Loader2 className="size-5 animate-spin text-gray-400" />
+              <Loader2 className="size-5 animate-spin text-zinc-400" />
             </div>
           ) : savedFilters.length === 0 ? (
-            <div className="p-4 text-center text-sm text-gray-500 dark:text-zinc-500">
+            <div className="p-4 text-center text-sm text-zinc-500 dark:text-zinc-500">
               No saved filters yet
             </div>
           ) : (
@@ -211,7 +211,7 @@ const SavedFilters = ({
                 <div
                   key={filter.id}
                   onClick={() => handleApplyFilter(filter)}
-                  className={`flex items-center justify-between p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-800 group ${
+                  className={`flex items-center justify-between p-3 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-800 group ${
                     activeFilter?.id === filter.id
                       ? 'bg-blue-50 dark:bg-blue-900/20'
                       : ''
@@ -221,17 +221,17 @@ const SavedFilters = ({
                     {filter.isDefault && (
                       <Star className="size-4 text-yellow-500 flex-shrink-0" />
                     )}
-                    <span className="text-sm text-gray-900 dark:text-zinc-100 truncate">
+                    <span className="text-sm text-zinc-900 dark:text-zinc-100 truncate">
                       {filter.name}
                     </span>
                   </div>
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition">
                     <button
                       onClick={(e) => handleSetDefault(filter, e)}
-                      className={`p-1.5 rounded hover:bg-gray-200 dark:hover:bg-zinc-700 ${
+                      className={`p-1.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 ${
                         filter.isDefault
                           ? 'text-yellow-500'
-                          : 'text-gray-400 dark:text-zinc-500'
+                          : 'text-zinc-400 dark:text-zinc-500'
                       }`}
                       title={filter.isDefault ? 'Remove default' : 'Set as default'}
                     >
@@ -243,7 +243,7 @@ const SavedFilters = ({
                     </button>
                     <button
                       onClick={(e) => handleDeleteFilter(filter, e)}
-                      className="p-1.5 rounded text-gray-400 dark:text-zinc-500 hover:text-red-500 hover:bg-gray-200 dark:hover:bg-zinc-700"
+                      className="p-1.5 rounded text-zinc-400 dark:text-zinc-500 hover:text-red-500 hover:bg-zinc-200 dark:hover:bg-zinc-700"
                       title="Delete filter"
                     >
                       <Trash2 className="size-4" />
@@ -254,7 +254,7 @@ const SavedFilters = ({
             </div>
           )}
 
-          <div className="p-2 border-t border-gray-200 dark:border-zinc-700">
+          <div className="p-2 border-t border-zinc-200 dark:border-zinc-700">
             <button
               onClick={() => {
                 setShowDropdown(false);
@@ -274,7 +274,7 @@ const SavedFilters = ({
       {showSaveDialog && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-xl w-full max-w-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
               Save Filter
             </h3>
             <input
@@ -282,7 +282,7 @@ const SavedFilters = ({
               value={newFilterName}
               onChange={(e) => setNewFilterName(e.target.value)}
               placeholder="Filter name..."
-              className="w-full px-4 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               autoFocus
             />
             <div className="flex justify-end gap-3 mt-6">
@@ -291,7 +291,7 @@ const SavedFilters = ({
                   setShowSaveDialog(false);
                   setNewFilterName('');
                 }}
-                className="px-4 py-2 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg"
+                className="px-4 py-2 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg"
               >
                 Cancel
               </button>
