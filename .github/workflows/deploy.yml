@@ -28,34 +28,11 @@ on:
 
 env:
   REGISTRY: ${{ secrets.DOCKER_USERNAME }}
+  DEPLOY_HOST: ${{ github.event.inputs.target == 'hetzner' && secrets.HETZNER_HOST || secrets.PRODUCTION_HOST }}
+  DEPLOY_USER: ${{ github.event.inputs.target == 'hetzner' && secrets.HETZNER_USER || secrets.PRODUCTION_USER }}
 
 jobs:
-  set-target:
-    runs-on: ubuntu-latest
-    outputs:
-      host: ${{ steps.target.outputs.host }}
-      user: ${{ steps.target.outputs.user }}
-      ssh_key: ${{ steps.target.outputs.ssh_key }}
-    steps:
-      - name: Set deploy target
-        id: target
-        run: |
-          if [ "${{ github.event.inputs.target }}" = "hetzner" ]; then
-            echo "host=${{ secrets.HETZNER_HOST }}" >> $GITHUB_OUTPUT
-            echo "user=${{ secrets.HETZNER_USER }}" >> $GITHUB_OUTPUT
-            echo "ssh_key<<ENDOFKEY" >> $GITHUB_OUTPUT
-            echo "${{ secrets.HETZNER_SSH_KEY }}" >> $GITHUB_OUTPUT
-            echo "ENDOFKEY" >> $GITHUB_OUTPUT
-          else
-            echo "host=${{ secrets.PRODUCTION_HOST }}" >> $GITHUB_OUTPUT
-            echo "user=${{ secrets.PRODUCTION_USER }}" >> $GITHUB_OUTPUT
-            echo "ssh_key<<ENDOFKEY" >> $GITHUB_OUTPUT
-            echo "${{ secrets.PRODUCTION_SSH_KEY }}" >> $GITHUB_OUTPUT
-            echo "ENDOFKEY" >> $GITHUB_OUTPUT
-          fi
-
   deploy-single:
-    needs: set-target
     if: ${{ github.event.inputs.app != 'all' && github.event.inputs.app != 'infrastructure' }}
     runs-on: ubuntu-latest
     steps:
@@ -65,9 +42,9 @@ jobs:
       - name: Sync compose file to server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ needs.set-target.outputs.host }}
-          username: ${{ needs.set-target.outputs.user }}
-          key: ${{ needs.set-target.outputs.ssh_key }}
+          host: ${{ env.DEPLOY_HOST }}
+          username: ${{ env.DEPLOY_USER }}
+          key: ${{ github.event.inputs.target == 'hetzner' && secrets.HETZNER_SSH_KEY || secrets.PRODUCTION_SSH_KEY }}
           source: "server-nestjs/docker-compose.prod.yml"
           target: "~/app"
           strip_components: 1
@@ -75,9 +52,9 @@ jobs:
       - name: Deploy ${{ github.event.inputs.app }}
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ needs.set-target.outputs.host }}
-          username: ${{ needs.set-target.outputs.user }}
-          key: ${{ needs.set-target.outputs.ssh_key }}
+          host: ${{ env.DEPLOY_HOST }}
+          username: ${{ env.DEPLOY_USER }}
+          key: ${{ github.event.inputs.target == 'hetzner' && secrets.HETZNER_SSH_KEY || secrets.PRODUCTION_SSH_KEY }}
           port: 22
           timeout: 120s
           command_timeout: 30m
@@ -121,7 +98,6 @@ jobs:
           echo "**Version:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
 
   deploy-all:
-    needs: set-target
     if: ${{ github.event.inputs.app == 'all' }}
     runs-on: ubuntu-latest
     steps:
@@ -131,9 +107,9 @@ jobs:
       - name: Sync compose file to server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ needs.set-target.outputs.host }}
-          username: ${{ needs.set-target.outputs.user }}
-          key: ${{ needs.set-target.outputs.ssh_key }}
+          host: ${{ env.DEPLOY_HOST }}
+          username: ${{ env.DEPLOY_USER }}
+          key: ${{ github.event.inputs.target == 'hetzner' && secrets.HETZNER_SSH_KEY || secrets.PRODUCTION_SSH_KEY }}
           source: "server-nestjs/docker-compose.prod.yml"
           target: "~/app"
           strip_components: 1
@@ -141,9 +117,9 @@ jobs:
       - name: Deploy All Services
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ needs.set-target.outputs.host }}
-          username: ${{ needs.set-target.outputs.user }}
-          key: ${{ needs.set-target.outputs.ssh_key }}
+          host: ${{ env.DEPLOY_HOST }}
+          username: ${{ env.DEPLOY_USER }}
+          key: ${{ github.event.inputs.target == 'hetzner' && secrets.HETZNER_SSH_KEY || secrets.PRODUCTION_SSH_KEY }}
           port: 22
           timeout: 120s
           command_timeout: 30m
@@ -185,7 +161,6 @@ jobs:
           echo "**Version:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
 
   deploy-infrastructure:
-    needs: set-target
     if: ${{ github.event.inputs.app == 'infrastructure' }}
     runs-on: ubuntu-latest
     steps:
@@ -195,9 +170,9 @@ jobs:
       - name: Sync compose file to server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ needs.set-target.outputs.host }}
-          username: ${{ needs.set-target.outputs.user }}
-          key: ${{ needs.set-target.outputs.ssh_key }}
+          host: ${{ env.DEPLOY_HOST }}
+          username: ${{ env.DEPLOY_USER }}
+          key: ${{ github.event.inputs.target == 'hetzner' && secrets.HETZNER_SSH_KEY || secrets.PRODUCTION_SSH_KEY }}
           source: "server-nestjs/docker-compose.prod.yml"
           target: "~/app"
           strip_components: 1
@@ -205,9 +180,9 @@ jobs:
       - name: Deploy Infrastructure
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ needs.set-target.outputs.host }}
-          username: ${{ needs.set-target.outputs.user }}
-          key: ${{ needs.set-target.outputs.ssh_key }}
+          host: ${{ env.DEPLOY_HOST }}
+          username: ${{ env.DEPLOY_USER }}
+          key: ${{ github.event.inputs.target == 'hetzner' && secrets.HETZNER_SSH_KEY || secrets.PRODUCTION_SSH_KEY }}
           port: 22
           timeout: 120s
           command_timeout: 30m
