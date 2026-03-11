@@ -13,12 +13,49 @@ on:
           - cronjob-worker
           - all
           - infrastructure
+      target:
+        description: 'Deploy target'
+        required: true
+        type: choice
+        options:
+          - hetzner
+          - aws
+      run_migrations:
+        description: 'Run migrations before deploy?'
+        required: false
+        type: boolean
+        default: false
 
 env:
   REGISTRY: ${{ secrets.DOCKER_USERNAME }}
 
 jobs:
+  set-target:
+    runs-on: ubuntu-latest
+    outputs:
+      host: ${{ steps.target.outputs.host }}
+      user: ${{ steps.target.outputs.user }}
+      ssh_key: ${{ steps.target.outputs.ssh_key }}
+    steps:
+      - name: Set deploy target
+        id: target
+        run: |
+          if [ "${{ github.event.inputs.target }}" = "hetzner" ]; then
+            echo "host=${{ secrets.HETZNER_HOST }}" >> $GITHUB_OUTPUT
+            echo "user=${{ secrets.HETZNER_USER }}" >> $GITHUB_OUTPUT
+            echo "ssh_key<<ENDOFKEY" >> $GITHUB_OUTPUT
+            echo "${{ secrets.HETZNER_SSH_KEY }}" >> $GITHUB_OUTPUT
+            echo "ENDOFKEY" >> $GITHUB_OUTPUT
+          else
+            echo "host=${{ secrets.PRODUCTION_HOST }}" >> $GITHUB_OUTPUT
+            echo "user=${{ secrets.PRODUCTION_USER }}" >> $GITHUB_OUTPUT
+            echo "ssh_key<<ENDOFKEY" >> $GITHUB_OUTPUT
+            echo "${{ secrets.PRODUCTION_SSH_KEY }}" >> $GITHUB_OUTPUT
+            echo "ENDOFKEY" >> $GITHUB_OUTPUT
+          fi
+
   deploy-single:
+    needs: set-target
     if: ${{ github.event.inputs.app != 'all' && github.event.inputs.app != 'infrastructure' }}
     runs-on: ubuntu-latest
     steps:
@@ -28,19 +65,19 @@ jobs:
       - name: Sync compose file to server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.PRODUCTION_HOST }}
-          username: ${{ secrets.PRODUCTION_USER }}
-          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          host: ${{ needs.set-target.outputs.host }}
+          username: ${{ needs.set-target.outputs.user }}
+          key: ${{ needs.set-target.outputs.ssh_key }}
           source: "server-nestjs/docker-compose.prod.yml"
           target: "~/app"
           strip_components: 1
 
-      - name: Deploy to EC2
+      - name: Deploy ${{ github.event.inputs.app }}
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.PRODUCTION_HOST }}
-          username: ${{ secrets.PRODUCTION_USER }}
-          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          host: ${{ needs.set-target.outputs.host }}
+          username: ${{ needs.set-target.outputs.user }}
+          key: ${{ needs.set-target.outputs.ssh_key }}
           port: 22
           timeout: 120s
           command_timeout: 30m
@@ -59,8 +96,12 @@ jobs:
             echo "Pulling ${{ github.event.inputs.app }}..."
             docker compose --env-file .env.production -f docker-compose.prod.yml pull ${{ github.event.inputs.app }}
 
-            echo "Running migrations..."
-            docker compose --env-file .env.production -f docker-compose.prod.yml run --rm migration
+            if [ "${{ github.event.inputs.run_migrations }}" = "true" ]; then
+              echo "Running migrations..."
+              docker compose --env-file .env.production -f docker-compose.prod.yml run --rm migration
+            else
+              echo "Skipping migrations"
+            fi
 
             echo "Restarting ${{ github.event.inputs.app }}..."
             docker compose --env-file .env.production -f docker-compose.prod.yml up -d ${{ github.event.inputs.app }}
@@ -75,10 +116,12 @@ jobs:
           echo "### Deploy Successful! :rocket:" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**App:** ${{ github.event.inputs.app }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Target:** ${{ github.event.inputs.target }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Migrations:** ${{ github.event.inputs.run_migrations }}" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Host:** ${{ secrets.PRODUCTION_HOST }}" >> $GITHUB_STEP_SUMMARY
 
   deploy-all:
+    needs: set-target
     if: ${{ github.event.inputs.app == 'all' }}
     runs-on: ubuntu-latest
     steps:
@@ -88,19 +131,19 @@ jobs:
       - name: Sync compose file to server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.PRODUCTION_HOST }}
-          username: ${{ secrets.PRODUCTION_USER }}
-          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          host: ${{ needs.set-target.outputs.host }}
+          username: ${{ needs.set-target.outputs.user }}
+          key: ${{ needs.set-target.outputs.ssh_key }}
           source: "server-nestjs/docker-compose.prod.yml"
           target: "~/app"
           strip_components: 1
 
-      - name: Deploy All Services to EC2
+      - name: Deploy All Services
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.PRODUCTION_HOST }}
-          username: ${{ secrets.PRODUCTION_USER }}
-          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          host: ${{ needs.set-target.outputs.host }}
+          username: ${{ needs.set-target.outputs.user }}
+          key: ${{ needs.set-target.outputs.ssh_key }}
           port: 22
           timeout: 120s
           command_timeout: 30m
@@ -119,8 +162,12 @@ jobs:
             echo "Pulling all services..."
             docker compose --env-file .env.production -f docker-compose.prod.yml pull app-api notification cronjob-worker
 
-            echo "Running migrations..."
-            docker compose --env-file .env.production -f docker-compose.prod.yml run --rm migration
+            if [ "${{ github.event.inputs.run_migrations }}" = "true" ]; then
+              echo "Running migrations..."
+              docker compose --env-file .env.production -f docker-compose.prod.yml run --rm migration
+            else
+              echo "Skipping migrations"
+            fi
 
             echo "Restarting all services..."
             docker compose --env-file .env.production -f docker-compose.prod.yml up -d app-api notification cronjob-worker
@@ -133,9 +180,12 @@ jobs:
       - name: Summary
         run: |
           echo "### Deploy All Services Successful! :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "**Target:** ${{ github.event.inputs.target }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Migrations:** ${{ github.event.inputs.run_migrations }}" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
 
   deploy-infrastructure:
+    needs: set-target
     if: ${{ github.event.inputs.app == 'infrastructure' }}
     runs-on: ubuntu-latest
     steps:
@@ -145,19 +195,19 @@ jobs:
       - name: Sync compose file to server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.PRODUCTION_HOST }}
-          username: ${{ secrets.PRODUCTION_USER }}
-          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          host: ${{ needs.set-target.outputs.host }}
+          username: ${{ needs.set-target.outputs.user }}
+          key: ${{ needs.set-target.outputs.ssh_key }}
           source: "server-nestjs/docker-compose.prod.yml"
           target: "~/app"
           strip_components: 1
 
-      - name: Deploy Infrastructure to EC2
+      - name: Deploy Infrastructure
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.PRODUCTION_HOST }}
-          username: ${{ secrets.PRODUCTION_USER }}
-          key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          host: ${{ needs.set-target.outputs.host }}
+          username: ${{ needs.set-target.outputs.user }}
+          key: ${{ needs.set-target.outputs.ssh_key }}
           port: 22
           timeout: 120s
           command_timeout: 30m
@@ -179,4 +229,5 @@ jobs:
       - name: Summary
         run: |
           echo "### Infrastructure Deployed! :rocket:" >> $GITHUB_STEP_SUMMARY
+          echo "**Target:** ${{ github.event.inputs.target }}" >> $GITHUB_STEP_SUMMARY
           echo "Services: PostgreSQL, Redis" >> $GITHUB_STEP_SUMMARY
