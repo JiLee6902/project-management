@@ -4,3 +4,6 @@ dist
 server/
 server-nestjs/.env.production
 note.txt
+id_ed25519_hetzner
+id_ed25519_hetzner.pub
+key.txt
