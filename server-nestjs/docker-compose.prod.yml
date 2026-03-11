@@ -1,6 +1,7 @@
 services:
   # Migration job - runs automatically before app services start
   migration:
+    platform: linux/amd64
     image: ${REGISTRY}/pm-app-api:${VERSION}
     container_name: pm-migration
     env_file:
@@ -150,6 +151,7 @@ services:
   #       compress: "true"
 
   app-api:
+    platform: linux/amd64
     image: ${REGISTRY}/pm-app-api:${VERSION}
     container_name: pm-app-api
     restart: unless-stopped
@@ -183,6 +185,7 @@ services:
         compress: "true"
 
   notification:
+    platform: linux/amd64
     image: ${REGISTRY}/pm-notification:${VERSION}
     container_name: pm-notification
     restart: unless-stopped
@@ -216,6 +219,7 @@ services:
         compress: "true"
 
   cronjob-worker:
+    platform: linux/amd64
     image: ${REGISTRY}/pm-cronjob-worker:${VERSION}
     container_name: pm-cronjob-worker
     restart: unless-stopped
