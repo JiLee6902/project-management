@@ -57,11 +57,11 @@ export class MarketplaceTemplate extends BaseEntity {
   @Column({ name: 'template_data', type: 'jsonb' })
   templateData: Record<string, any>;
 
-  @Column({ name: 'author_id' })
+  @Column({ name: 'author_id', nullable: true })
   @Index()
   authorId: string;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'author_id' })
   author: User;
 

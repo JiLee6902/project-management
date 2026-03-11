@@ -4,11 +4,12 @@ import { MarketplaceTemplate, TemplateReview, Project } from '@app/entity/entiti
 import { MarketplaceController } from './controller/marketplace.controller';
 import { MarketplaceService } from './service/marketplace.service';
 import { MarketplaceRepository } from './repository/marketplace.repository';
+import { MarketplaceSeedService } from './service/marketplace-seed.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([MarketplaceTemplate, TemplateReview, Project])],
   controllers: [MarketplaceController],
-  providers: [MarketplaceService, MarketplaceRepository],
+  providers: [MarketplaceService, MarketplaceRepository, MarketplaceSeedService],
   exports: [MarketplaceService],
 })
 export class MarketplaceModule {}

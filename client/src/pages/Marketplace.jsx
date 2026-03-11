@@ -8,26 +8,28 @@ import toast from 'react-hot-toast'
 import marketplaceService from '../services/marketplaceService'
 
 const CATEGORIES = [
-    'All',
-    'Project Management',
-    'Software Dev',
-    'Marketing',
-    'Design',
-    'HR',
-    'Finance',
-    'Operations',
-    'Education',
+    { value: 'All', label: 'All' },
+    { value: 'PROJECT_MANAGEMENT', label: 'Project Management' },
+    { value: 'SOFTWARE_DEV', label: 'Software Dev' },
+    { value: 'MARKETING', label: 'Marketing' },
+    { value: 'DESIGN', label: 'Design' },
+    { value: 'HR', label: 'HR' },
+    { value: 'FINANCE', label: 'Finance' },
+    { value: 'EDUCATION', label: 'Education' },
+    { value: 'OTHER', label: 'Other' },
 ]
 
+const CATEGORY_LABELS = Object.fromEntries(CATEGORIES.map(c => [c.value, c.label]))
+
 const CATEGORY_COLORS = {
-    'Project Management': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-    'Software Dev': 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
-    'Marketing': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-    'Design': 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400',
+    'PROJECT_MANAGEMENT': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    'SOFTWARE_DEV': 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
+    'MARKETING': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+    'DESIGN': 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400',
     'HR': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-    'Finance': 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
-    'Operations': 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-    'Education': 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
+    'FINANCE': 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400',
+    'EDUCATION': 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
+    'OTHER': 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
 }
 
 // ─── Star Rating Component ─────────────────────────────────────────────────────
@@ -74,7 +76,7 @@ function TemplateCard({ template, onClick }) {
                     <Package size={20} className="text-zinc-500 dark:text-zinc-400" />
                 </div>
                 <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${categoryClass}`}>
-                    {template.category}
+                    {CATEGORY_LABELS[template.category] || template.category}
                 </span>
             </div>
 
@@ -135,7 +137,7 @@ function FeaturedCard({ template, onClick }) {
                 <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-zinc-900 dark:text-white text-sm truncate">{template.name}</h4>
                     <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${categoryClass}`}>
-                        {template.category}
+                        {CATEGORY_LABELS[template.category] || template.category}
                     </span>
                 </div>
             </div>
@@ -159,8 +161,8 @@ function PublishModal({ isOpen, onClose }) {
     const [form, setForm] = useState({
         name: '',
         description: '',
-        category: 'Project Management',
-        type: 'project',
+        category: 'PROJECT_MANAGEMENT',
+        type: 'PROJECT',
         templateData: '',
         tags: '',
         isPublic: true,
@@ -199,7 +201,7 @@ function PublishModal({ isOpen, onClose }) {
             })
             toast.success('Template published successfully!')
             onClose()
-            setForm({ name: '', description: '', category: 'Project Management', type: 'project', templateData: '', tags: '', isPublic: true })
+            setForm({ name: '', description: '', category: 'PROJECT_MANAGEMENT', type: 'PROJECT', templateData: '', tags: '', isPublic: true })
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to publish template')
         } finally {
@@ -252,8 +254,8 @@ function PublishModal({ isOpen, onClose }) {
                                 onChange={(e) => setForm({ ...form, category: e.target.value })}
                                 className="w-full px-3.5 py-2.5 text-sm rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-zinc-100/10 focus:border-zinc-400 transition-all"
                             >
-                                {CATEGORIES.filter((c) => c !== 'All').map((cat) => (
-                                    <option key={cat} value={cat}>{cat}</option>
+                                {CATEGORIES.filter((c) => c.value !== 'All').map((cat) => (
+                                    <option key={cat.value} value={cat.value}>{cat.label}</option>
                                 ))}
                             </select>
                         </div>
@@ -264,10 +266,9 @@ function PublishModal({ isOpen, onClose }) {
                                 onChange={(e) => setForm({ ...form, type: e.target.value })}
                                 className="w-full px-3.5 py-2.5 text-sm rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-zinc-900/10 dark:focus:ring-zinc-100/10 focus:border-zinc-400 transition-all"
                             >
-                                <option value="project">Project</option>
-                                <option value="board">Board</option>
-                                <option value="workflow">Workflow</option>
-                                <option value="task_list">Task List</option>
+                                <option value="PROJECT">Project</option>
+                                <option value="TASK">Task</option>
+                                <option value="WORKFLOW">Workflow</option>
                             </select>
                         </div>
                     </div>
@@ -413,7 +414,7 @@ function DetailModal({ template, isOpen, onClose }) {
                         </div>
                         <div className="min-w-0">
                             <h2 className="text-lg font-semibold text-zinc-900 dark:text-white truncate">{t.name}</h2>
-                            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${categoryClass}`}>{t.category}</span>
+                            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${categoryClass}`}>{CATEGORY_LABELS[t.category] || t.category}</span>
                         </div>
                     </div>
                     <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex-shrink-0">
@@ -675,15 +676,15 @@ export default function Marketplace() {
                 <Filter size={14} className="text-zinc-400 flex-shrink-0" />
                 {CATEGORIES.map((cat) => (
                     <button
-                        key={cat}
-                        onClick={() => setActiveCategory(cat)}
+                        key={cat.value}
+                        onClick={() => setActiveCategory(cat.value)}
                         className={`flex-shrink-0 px-3.5 py-1.5 text-sm rounded-full font-medium transition-all duration-200 ${
-                            activeCategory === cat
+                            activeCategory === cat.value
                                 ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-sm'
                                 : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
                         }`}
                     >
-                        {cat}
+                        {cat.label}
                     </button>
                 ))}
             </div>
