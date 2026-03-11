@@ -39,6 +39,8 @@ import {
   Permission,
   Role,
   GuestSession,
+  MarketplaceTemplate,
+  TemplateReview,
 } from '@app/entity';
 
 import { AuthModule } from './domain/auth/auth.module';
@@ -68,6 +70,8 @@ import { RecurringTaskModule } from './domain/recurring-task/recurring-task.modu
 import { AuditLogModule } from './domain/audit-log/audit-log.module';
 import { ImportModule } from './domain/import/import.module';
 import { PermissionModule } from './domain/permission/permission.module';
+import { MarketplaceModule } from './domain/marketplace/marketplace.module';
+import { AiAssistantModule } from './domain/ai-assistant/ai-assistant.module';
 
 @Module({
   imports: [
@@ -138,6 +142,8 @@ import { PermissionModule } from './domain/permission/permission.module';
           Permission,
           Role,
           GuestSession,
+          MarketplaceTemplate,
+          TemplateReview,
         ],
         synchronize: configService.get<string>('TYPEORM_SYNCHRONIZE') === 'true' || configService.get<string>('NODE_ENV') === 'development',
         logging:
@@ -189,6 +195,8 @@ import { PermissionModule } from './domain/permission/permission.module';
     AuditLogModule,
     ImportModule,
     PermissionModule,
+    MarketplaceModule,
+    AiAssistantModule,
   ],
   providers: [
     {

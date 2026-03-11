@@ -7,6 +7,7 @@ import Team from './pages/Team'
 import ProjectDetails from './pages/ProjectDetails'
 import TaskDetails from './pages/TaskDetails'
 import Settings from './pages/Settings'
+import Marketplace from './pages/Marketplace'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import AuthCallback from './pages/AuthCallback'
@@ -52,6 +53,7 @@ const App = () => {
                     <Route path="projectsDetail" element={<ProjectDetails />} />
                     <Route path="taskDetails" element={<TaskDetails />} />
                     <Route path="my-tasks" element={<MyTasks />} />
+                    <Route path="marketplace" element={<Marketplace />} />
                     <Route path="settings" element={<Settings />} />
                 </Route>
             </Routes>

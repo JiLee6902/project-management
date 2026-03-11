@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import WorkspaceDropdown from './WorkspaceDropdown'
-import { FolderOpenIcon, LayoutDashboardIcon, SettingsIcon, UsersIcon } from 'lucide-react'
+import { FolderOpenIcon, LayoutDashboardIcon, SettingsIcon, UsersIcon, StoreIcon } from 'lucide-react'
 import MyTasksSidebar from './MyTasksSidebar'
 import ProjectSidebar from './ProjectsSidebar'
 import { NavLink } from 'react-router-dom'
@@ -11,6 +11,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
         { name: 'Dashboard', href: '/', icon: LayoutDashboardIcon },
         { name: 'Projects', href: '/projects', icon: FolderOpenIcon },
         { name: 'Team', href: '/team', icon: UsersIcon },
+        { name: 'Marketplace', href: '/marketplace', icon: StoreIcon },
     ]
 
     const sidebarRef = useRef(null);

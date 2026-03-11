@@ -29,3 +29,5 @@ export * from './audit-log.entity';
 export * from './permission.entity';
 export * from './role.entity';
 export * from './guest-session.entity';
+export * from './marketplace-template.entity';
+export * from './template-review.entity';
