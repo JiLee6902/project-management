@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
 WORKDIR /app
 
@@ -25,16 +25,17 @@ RUN npx tsc libs/entity/src/data-source.migration.ts libs/entity/src/migrations/
     --skipLibCheck --resolveJsonModule
 
 # Production stage
-FROM node:20-alpine AS production
+FROM node:20-slim AS production
 
 WORKDIR /app
 
 # Install curl for healthcheck
-RUN apk add --no-cache curl
+RUN apt-get update && apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nestjs -u 1001
+RUN groupadd --gid 1001 nodejs && \
+    useradd --uid 1001 --gid nodejs --shell /bin/false nestjs
 
 # Copy package files
 COPY package*.json ./
@@ -69,4 +70,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:${PORT}/api || exit 1
 
 # Start the application directly (shell form to expand $APP_NAME)
-CMD node dist/apps/$APP_NAME/main.js
+CMD ["sh", "-c", "node dist/apps/$APP_NAME/main.js"]
